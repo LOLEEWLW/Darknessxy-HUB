@@ -1,0 +1,1210 @@
+--[[
+    DARK PREMIUM - VERSÃO ULTRA HD EXTREME (REVISITED)
+    Sistema de Key com RGB + Animações
+    Tema: Vermelho Neon / Dark + Rosto Feliz Animado (desaparece após login)
+    MEGA UPDATE: Painel 600x750, + abas, + opções de otimização, visual, misc
+]]
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local Debris = game:GetService("Debris")
+local StarterGui = game:GetService("StarterGui")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local camera = Workspace.CurrentCamera
+
+-- ==========================================
+-- SISTEMA DE KEY (LOGIN) - RGB ANIMADO
+-- ==========================================
+local CorrectKey = "DRKPREMIUM"
+
+local guiParent = (gethui and gethui()) or CoreGui
+
+if guiParent:FindFirstChild("DARKHUB") then
+    guiParent.DARKHUB:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DARKHUB"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = guiParent
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- ==========================================
+-- VARIÁVEIS GLOBAIS
+-- ==========================================
+local uiVisible = true
+local espEnabled = true
+
+-- GLITCH
+getgenv().GlideEnabled = false
+getgenv().GlideSpeed = 350  
+getgenv().GlideTime = 0.20   
+local JumpForce = 300       
+local LastShootTime = 0
+
+-- FLY V3
+local flyActive = false
+local flySpeed = 400
+local FlyVel = nil
+
+-- HITBOX
+getgenv().HitboxSize = 15
+getgenv().HitboxTransparency = 0.9
+getgenv().HitboxStatus = false
+getgenv().TeamCheck = false
+
+-- AIMBOT / GRUDA
+local aimbotZ = false
+local aimbotX = false
+local grudaC = false
+local aimbotTarget = nil
+
+-- OTIMIZAÇÃO, VISUAL, MISC
+local reduceParticles = false
+local removeFog = false
+local maxFPS = 60
+local removeDecorations = false
+local removeWaterEffects = false
+local disableShadows = false
+local disableAnimations = false
+
+local chamsEnabled = false
+local chamsColor = Color3.fromRGB(255, 0, 0)
+local wireframeEnabled = false
+local zoomLevel = 1
+local fovLevel = 70
+
+local antiAFK = false
+local autoFarm = false
+local godMode = false
+local infiniteJump = false
+local speedHack = false
+local speedHackValue = 50
+
+local autoClickActive = false
+local autoClickInterval = 0.1
+local fastAttackActive = false
+local fastAttackInterval = 0.15
+
+local pingDisplay = 0
+
+-- ==========================================
+-- FUNDO ANIMADO COM ROSTO FELIZ + PARTÍCULAS
+-- ==========================================
+
+local Background = nil  -- variável para destruir depois
+
+-- Frame de fundo escuro com gradiente
+Background = Instance.new("Frame")
+Background.Size = UDim2.new(1, 0, 1, 0)
+Background.BackgroundColor3 = Color3.fromRGB(8, 0, 0)
+Background.BackgroundTransparency = 0.4
+Background.Parent = ScreenGui
+
+-- Gradiente (usando um ImageLabel com gradiente feito no momento)
+local gradient = Instance.new("ImageLabel")
+gradient.Size = UDim2.new(1, 0, 1, 0)
+gradient.BackgroundTransparency = 1
+gradient.Image = "rbxassetid://1461692487" -- gradiente preto-vermelho
+gradient.ImageColor3 = Color3.fromRGB(50, 0, 0)
+gradient.ImageTransparency = 0.5
+gradient.Parent = Background
+
+-- ===== ROSTO FELIZ ANIMADO =====
+local FaceFrame = Instance.new("Frame")
+FaceFrame.Size = UDim2.new(0, 120, 0, 120)
+FaceFrame.Position = UDim2.new(0.5, -60, 0.5, -60)
+FaceFrame.BackgroundTransparency = 1
+FaceFrame.Parent = Background
+
+-- Olho esquerdo
+local EyeL = Instance.new("Frame")
+EyeL.Size = UDim2.new(0, 18, 0, 18)
+EyeL.Position = UDim2.new(0.25, -9, 0.3, -9)
+EyeL.BackgroundColor3 = Color3.fromRGB(255, 200, 200)
+EyeL.BackgroundTransparency = 0
+EyeL.BorderSizePixel = 0
+EyeL.Parent = FaceFrame
+Instance.new("UICorner", EyeL).CornerRadius = UDim.new(1, 0)
+
+-- Olho direito
+local EyeR = Instance.new("Frame")
+EyeR.Size = UDim2.new(0, 18, 0, 18)
+EyeR.Position = UDim2.new(0.75, -9, 0.3, -9)
+EyeR.BackgroundColor3 = Color3.fromRGB(255, 200, 200)
+EyeR.BackgroundTransparency = 0
+EyeR.BorderSizePixel = 0
+EyeR.Parent = FaceFrame
+Instance.new("UICorner", EyeR).CornerRadius = UDim.new(1, 0)
+
+-- Pupila esquerda (menor)
+local PupilL = Instance.new("Frame")
+PupilL.Size = UDim2.new(0, 8, 0, 8)
+PupilL.Position = UDim2.new(0.3, -4, 0.35, -4)
+PupilL.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+PupilL.BorderSizePixel = 0
+PupilL.Parent = EyeL
+Instance.new("UICorner", PupilL).CornerRadius = UDim.new(1, 0)
+
+-- Pupila direita
+local PupilR = Instance.new("Frame")
+PupilR.Size = UDim2.new(0, 8, 0, 8)
+PupilR.Position = UDim2.new(0.3, -4, 0.35, -4)
+PupilR.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+PupilR.BorderSizePixel = 0
+PupilR.Parent = EyeR
+Instance.new("UICorner", PupilR).CornerRadius = UDim.new(1, 0)
+
+-- Boca (arco feliz) usando um Frame com ângulo
+local Mouth = Instance.new("Frame")
+Mouth.Size = UDim2.new(0, 50, 0, 25)
+Mouth.Position = UDim2.new(0.5, -25, 0.65, 0)
+Mouth.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+Mouth.BackgroundTransparency = 0
+Mouth.BorderSizePixel = 0
+Mouth.Parent = FaceFrame
+Instance.new("UICorner", Mouth).CornerRadius = UDim.new(0, 20)
+
+-- Animação do rosto (piscar e sorrir)
+task.spawn(function()
+    while Background and Background.Parent do
+        -- Piscar (fechar olhos)
+        TweenService:Create(EyeL, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 18, 0, 2)}):Play()
+        TweenService:Create(EyeR, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 18, 0, 2)}):Play()
+        task.wait(0.15)
+        TweenService:Create(EyeL, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 18, 0, 18)}):Play()
+        TweenService:Create(EyeR, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 18, 0, 18)}):Play()
+        task.wait(3)
+        -- Sorrir mais (aumentar boca)
+        TweenService:Create(Mouth, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 60, 0, 30)}):Play()
+        task.wait(0.5)
+        TweenService:Create(Mouth, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 50, 0, 25)}):Play()
+        task.wait(2.5)
+    end
+end)
+
+-- ===== PARTÍCULAS (estrelas flutuantes) =====
+local Particles = Instance.new("Folder")
+Particles.Name = "Particles"
+Particles.Parent = Background
+
+for i = 1, 25 do
+    local star = Instance.new("Frame")
+    star.Size = UDim2.new(0, math.random(4, 10), 0, math.random(4, 10))
+    star.Position = UDim2.new(math.random() * 0.95, 0, math.random() * 0.95, 0)
+    star.BackgroundColor3 = Color3.fromRGB(255, 200, 200)
+    star.BackgroundTransparency = 0.2 + math.random() * 0.6
+    star.BorderSizePixel = 0
+    star.Parent = Particles
+    Instance.new("UICorner", star).CornerRadius = UDim.new(1, 0)
+
+    -- Animação flutuante
+    task.spawn(function()
+        local startX = star.Position.X.Scale
+        local startY = star.Position.Y.Scale
+        local speed = 0.5 + math.random() * 0.5
+        local offsetX = (math.random() - 0.5) * 0.1
+        local offsetY = (math.random() - 0.5) * 0.1
+        local t = 0
+        while Background and Background.Parent do
+            t = t + 0.02 * speed
+            local x = startX + math.sin(t) * 0.05 + offsetX
+            local y = startY + math.cos(t * 0.7) * 0.05 + offsetY
+            star.Position = UDim2.new(math.clamp(x, 0, 1), 0, math.clamp(y, 0, 1), 0)
+            task.wait(0.03)
+        end
+    end)
+end
+
+-- ==========================================
+-- FUNÇÕES DE ESTILO ANIMADO
+-- ==========================================
+
+local function createRGBBorder(frame, thickness)
+    thickness = thickness or 3
+    local stroke = Instance.new("UIStroke")
+    stroke.Thickness = thickness
+    stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    stroke.Parent = frame
+    
+    local hue = 0
+    game:GetService("RunService").RenderStepped:Connect(function()
+        hue = (hue + 0.02) % 1
+        stroke.Color = Color3.fromHSV(hue, 1, 0.8)
+    end)
+    return stroke
+end
+
+local function animateIn(instance, duration)
+    duration = duration or 0.3
+    instance.Size = UDim2.new(0, 0, 0, 0)
+    instance.Position = UDim2.new(0.5, -instance.Size.X.Offset/2, 0.5, -instance.Size.Y.Offset/2)
+    instance.BackgroundTransparency = 1
+    local tween = TweenService:Create(instance, TweenInfo.new(duration, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 500, 0, 200),
+        Position = UDim2.new(0.5, -250, 0.5, -100),
+        BackgroundTransparency = 0.15
+    })
+    tween:Play()
+    return tween
+end
+
+-- ==========================================
+-- SISTEMA DE KEY
+-- ==========================================
+
+local KeyFrame = Instance.new("Frame")
+KeyFrame.Size = UDim2.new(0, 0, 0, 0)
+KeyFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+KeyFrame.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+KeyFrame.BackgroundTransparency = 0.15
+KeyFrame.BorderSizePixel = 0
+KeyFrame.Active = true
+KeyFrame.Draggable = true
+KeyFrame.Parent = ScreenGui
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 12)
+createRGBBorder(KeyFrame, 3)
+animateIn(KeyFrame, 0.5)
+
+local KeyTitle = Instance.new("TextLabel")
+KeyTitle.Size = UDim2.new(1, 0, 0, 40)
+KeyTitle.Position = UDim2.new(0, 0, 0, 20)
+KeyTitle.BackgroundTransparency = 1
+KeyTitle.Text = "⚡ DARK PREMIUM ⚡"
+KeyTitle.TextColor3 = Color3.fromRGB(255, 0, 0)
+KeyTitle.Font = Enum.Font.GothamBlack
+KeyTitle.TextSize = 24
+KeyTitle.Parent = KeyFrame
+
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Size = UDim2.new(1, 0, 0, 25)
+SubTitle.Position = UDim2.new(0, 0, 0, 60)
+SubTitle.BackgroundTransparency = 1
+SubTitle.Text = "🔒 KEY DO DARKNEESXY HUB"
+SubTitle.TextColor3 = Color3.fromRGB(255, 100, 100)
+SubTitle.Font = Enum.Font.GothamMedium
+SubTitle.TextSize = 16
+SubTitle.Parent = KeyFrame
+
+local KeyInput = Instance.new("TextBox")
+KeyInput.Size = UDim2.new(0.8, 0, 0, 35)
+KeyInput.Position = UDim2.new(0.1, 0, 0, 95)
+KeyInput.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+KeyInput.Text = ""
+KeyInput.PlaceholderText = "Digite a Key aqui..."
+KeyInput.TextColor3 = Color3.fromRGB(255, 50, 50)
+KeyInput.Font = Enum.Font.GothamMedium
+KeyInput.TextSize = 16
+KeyInput.Parent = KeyFrame
+Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
+createRGBBorder(KeyInput, 2)
+
+local LoginBtn = Instance.new("TextButton")
+LoginBtn.Size = UDim2.new(0.8, 0, 0, 35)
+LoginBtn.Position = UDim2.new(0.1, 0, 0, 140)
+LoginBtn.BackgroundColor3 = Color3.fromRGB(20, 0, 0)
+LoginBtn.Text = "🔓 ACESSAR"
+LoginBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+LoginBtn.Font = Enum.Font.GothamBold
+LoginBtn.TextSize = 16
+LoginBtn.Parent = KeyFrame
+Instance.new("UICorner", LoginBtn).CornerRadius = UDim.new(0, 6)
+createRGBBorder(LoginBtn, 2)
+
+LoginBtn.MouseEnter:Connect(function()
+    TweenService:Create(LoginBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = Color3.fromRGB(60, 0, 0),
+        TextColor3 = Color3.fromRGB(255, 150, 150)
+    }):Play()
+end)
+LoginBtn.MouseLeave:Connect(function()
+    TweenService:Create(LoginBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        BackgroundColor3 = Color3.fromRGB(20, 0, 0),
+        TextColor3 = Color3.fromRGB(255, 50, 50)
+    }):Play()
+end)
+
+local StatusText = Instance.new("TextLabel")
+StatusText.Size = UDim2.new(1, 0, 0, 20)
+StatusText.Position = UDim2.new(0, 0, 0, 180)
+StatusText.BackgroundTransparency = 1
+StatusText.Text = "🔑 Aguardando chave..."
+StatusText.TextColor3 = Color3.fromRGB(255, 200, 100)
+StatusText.Font = Enum.Font.Gotham
+StatusText.TextSize = 12
+StatusText.Parent = KeyFrame
+
+-- ==========================================
+-- PAINEL PRINCIPAL - MEGA TAMANHO
+-- ==========================================
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 0, 0, 0)
+MainFrame.Position = UDim2.new(0.02, 0, 0.05, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+MainFrame.BackgroundTransparency = 0.1
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
+createRGBBorder(MainFrame, 3)
+
+local TitleTop = Instance.new("TextLabel")
+TitleTop.Size = UDim2.new(1, 0, 0, 40)
+TitleTop.Position = UDim2.new(0, 0, 0, 10)
+TitleTop.BackgroundTransparency = 1
+TitleTop.Text = "⚡ DARKNESSXY HUB ⚡"
+TitleTop.TextColor3 = Color3.fromRGB(255, 0, 0)
+TitleTop.Font = Enum.Font.GothamBlack
+TitleTop.TextSize = 30
+TitleTop.Parent = MainFrame
+
+-- Animação de pulsação no título
+task.spawn(function()
+    while MainFrame and MainFrame.Visible do
+        TweenService:Create(TitleTop, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 0, true, -1)):Play()
+        wait(0.8)
+    end
+end)
+
+local SubTitleMain = Instance.new("TextLabel")
+SubTitleMain.Size = UDim2.new(1, 0, 0, 20)
+SubTitleMain.Position = UDim2.new(0, 0, 0, 50)
+SubTitleMain.BackgroundTransparency = 1
+SubTitleMain.Text = "⚡ PREMIUM FOR PLAYERS ⚡"
+SubTitleMain.TextColor3 = Color3.fromRGB(255, 100, 100)
+SubTitleMain.Font = Enum.Font.GothamBold
+SubTitleMain.TextSize = 14
+SubTitleMain.Parent = MainFrame
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 8)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 18
+CloseBtn.Parent = MainFrame
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
+createRGBBorder(CloseBtn, 2)
+
+CloseBtn.MouseEnter:Connect(function()
+    TweenService:Create(CloseBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(100, 0, 0)}):Play()
+end)
+CloseBtn.MouseLeave:Connect(function()
+    TweenService:Create(CloseBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 0, 0)}):Play()
+end)
+CloseBtn.MouseButton1Click:Connect(function()
+    uiVisible = false
+    MainFrame.Visible = false
+end)
+
+local function animateMainIn()
+    MainFrame.Visible = true
+    MainFrame.Size = UDim2.new(0, 0, 0, 0)
+    MainFrame.BackgroundTransparency = 1
+    local tween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 600, 0, 750),
+        BackgroundTransparency = 0.1
+    })
+    tween:Play()
+    return tween
+end
+
+-- ==========================================
+-- BARRA DE ABAS (8 ABAS)
+-- ==========================================
+
+local TabBar = Instance.new("Frame")
+TabBar.Size = UDim2.new(0.95, 0, 0, 45)
+TabBar.Position = UDim2.new(0.025, 0, 0, 75)
+TabBar.BackgroundTransparency = 1
+TabBar.Parent = MainFrame
+
+local function createTabButton(text, xPos)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0.12, 0, 1, 0)
+    Btn.Position = UDim2.new(xPos, 0, 0, 0)
+    Btn.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+    Btn.Text = text
+    Btn.TextColor3 = Color3.fromRGB(255, 50, 50)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 9
+    Btn.Parent = TabBar
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 5)
+    createRGBBorder(Btn, 1.5)
+    Btn.MouseEnter:Connect(function()
+        TweenService:Create(Btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(40, 0, 0)}):Play()
+    end)
+    Btn.MouseLeave:Connect(function()
+        TweenService:Create(Btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(15, 0, 0)}):Play()
+    end)
+    return Btn
+end
+
+local TabGlitchBtn = createTabButton("GLITCH", 0)
+local TabEspBtn = createTabButton("ESP", 0.125)
+local TabHitboxBtn = createTabButton("HITBOX", 0.25)
+local TabFlyBtn = createTabButton("FLY", 0.375)
+local TabCombatBtn = createTabButton("COMBAT", 0.5)
+local TabUtilsBtn = createTabButton("UTILS", 0.625)
+local TabOptBtn = createTabButton("OTIMIZ", 0.75)
+local TabVisualBtn = createTabButton("VISUAL", 0.875)
+
+-- Páginas
+local Pages = Instance.new("Frame")
+Pages.Size = UDim2.new(1, 0, 0, 600)
+Pages.Position = UDim2.new(0, 0, 0, 130)
+Pages.BackgroundTransparency = 1
+Pages.Parent = MainFrame
+
+local pageNames = {"GlitchPage", "EspPage", "FlyPage", "HitboxPage", "CombatPage", "UtilsPage", "OptimizationPage", "VisualPage"}
+local pages = {}
+for _, name in ipairs(pageNames) do
+    local page = Instance.new("Frame")
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    page.Parent = Pages
+    pages[name] = page
+end
+
+local function showPage(page)
+    for _, p in pairs(pages) do p.Visible = (p == page) end
+    local active = Color3.fromRGB(60, 0, 0)
+    local inactive = Color3.fromRGB(15, 0, 0)
+    TabGlitchBtn.BackgroundColor3 = (page == pages.GlitchPage) and active or inactive
+    TabEspBtn.BackgroundColor3 = (page == pages.EspPage) and active or inactive
+    TabHitboxBtn.BackgroundColor3 = (page == pages.HitboxPage) and active or inactive
+    TabFlyBtn.BackgroundColor3 = (page == pages.FlyPage) and active or inactive
+    TabCombatBtn.BackgroundColor3 = (page == pages.CombatPage) and active or inactive
+    TabUtilsBtn.BackgroundColor3 = (page == pages.UtilsPage) and active or inactive
+    TabOptBtn.BackgroundColor3 = (page == pages.OptimizationPage) and active or inactive
+    TabVisualBtn.BackgroundColor3 = (page == pages.VisualPage) and active or inactive
+end
+
+showPage(pages.CombatPage)
+
+TabGlitchBtn.MouseButton1Click:Connect(function() showPage(pages.GlitchPage) end)
+TabEspBtn.MouseButton1Click:Connect(function() showPage(pages.EspPage) end)
+TabFlyBtn.MouseButton1Click:Connect(function() showPage(pages.FlyPage) end)
+TabHitboxBtn.MouseButton1Click:Connect(function() showPage(pages.HitboxPage) end)
+TabCombatBtn.MouseButton1Click:Connect(function() showPage(pages.CombatPage) end)
+TabUtilsBtn.MouseButton1Click:Connect(function() showPage(pages.UtilsPage) end)
+TabOptBtn.MouseButton1Click:Connect(function() showPage(pages.OptimizationPage) end)
+TabVisualBtn.MouseButton1Click:Connect(function() showPage(pages.VisualPage) end)
+
+-- ==========================================
+-- FUNÇÕES DE CRIAÇÃO DE ELEMENTOS
+-- ==========================================
+
+local function createInputField(labelText, defaultVal, yPos, parentPage)
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(0.5, 0, 0, 35)
+    Label.Position = UDim2.new(0, 20, 0, yPos)
+    Label.BackgroundTransparency = 1
+    Label.Text = labelText
+    Label.TextColor3 = Color3.fromRGB(255, 100, 100)
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Font = Enum.Font.GothamMedium
+    Label.TextSize = 14
+    Label.Parent = parentPage
+
+    local InputBg = Instance.new("Frame")
+    InputBg.Size = UDim2.new(0.42, 0, 0, 32)
+    InputBg.Position = UDim2.new(0.53, -5, 0, yPos)
+    InputBg.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
+    InputBg.BorderSizePixel = 0
+    InputBg.Parent = parentPage
+    Instance.new("UICorner", InputBg).CornerRadius = UDim.new(0, 4)
+    createRGBBorder(InputBg, 1.5)
+
+    local Input = Instance.new("TextBox")
+    Input.Size = UDim2.new(1, 0, 1, 0)
+    Input.BackgroundTransparency = 1
+    Input.TextColor3 = Color3.fromRGB(255, 50, 50)
+    Input.Text = tostring(defaultVal)
+    Input.Font = Enum.Font.GothamMedium
+    Input.TextSize = 15
+    Input.Parent = InputBg
+    return Input
+end
+
+local function createToggleButton(text, yPos, parentPage)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0.9, 0, 0, 35)
+    Btn.Position = UDim2.new(0.05, 0, 0, yPos)
+    Btn.BackgroundColor3 = Color3.fromRGB(15, 0, 0)
+    Btn.Text = text
+    Btn.TextColor3 = Color3.fromRGB(255, 50, 50)
+    Btn.Font = Enum.Font.GothamBold
+    Btn.TextSize = 13
+    Btn.Parent = parentPage
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 5)
+    createRGBBorder(Btn, 2)
+    Btn.MouseEnter:Connect(function()
+        TweenService:Create(Btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(40, 0, 0)}):Play()
+    end)
+    Btn.MouseLeave:Connect(function()
+        TweenService:Create(Btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(15, 0, 0)}):Play()
+    end)
+    return Btn
+end
+
+-- ==========================================
+-- PÁGINAS (GLITCH, ESP, FLY, HITBOX, COMBAT, UTILS)
+-- ==========================================
+
+-- ESP Page
+local EspToggleBtn = createToggleButton("🛡️ ESP (B): ON", 5, pages.EspPage)
+local function updateEspVisual()
+    EspToggleBtn.Text = espEnabled and "🛡️ ESP (B): ON" or "🛡️ ESP (B): OFF"
+    EspToggleBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+end
+EspToggleBtn.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    updateEspVisual()
+end)
+
+-- Glitch Page
+local GlitchToggleBtn = createToggleButton("⚡ GLITCH: OFF", 5, pages.GlitchPage)
+local GlitchSpeedInput = createInputField("Velocidade:", getgenv().GlideSpeed, 55, pages.GlitchPage)
+local GlitchDurInput = createInputField("Duração:", getgenv().GlideTime, 95, pages.GlitchPage)
+local JumpPowerInput = createInputField("G-Jump Power:", JumpForce, 135, pages.GlitchPage)
+local function updateGlitchVisual()
+    GlitchToggleBtn.Text = getgenv().GlideEnabled and "⚡ GLITCH: ON" or "⚡ GLITCH: OFF"
+    GlitchToggleBtn.BackgroundColor3 = getgenv().GlideEnabled and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+end
+GlitchToggleBtn.MouseButton1Click:Connect(function()
+    getgenv().GlideEnabled = not getgenv().GlideEnabled
+    updateGlitchVisual()
+end)
+
+-- Fly Page
+local FlyToggleBtn = createToggleButton("🪁 FLY (H): OFF", 5, pages.FlyPage)
+local FlySpeedInput = createInputField("Fly Speed:", flySpeed, 55, pages.FlyPage)
+local function updateFlyState(state)
+    flyActive = state
+    FlyToggleBtn.Text = flyActive and "🪁 FLY (H): ON" or "🪁 FLY (H): OFF"
+    FlyToggleBtn.BackgroundColor3 = flyActive and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    if not flyActive then
+        if FlyVel then FlyVel:Destroy() FlyVel = nil end
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.PlatformStand = false
+        end
+    elseif player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.PlatformStand = true
+    end
+end
+FlyToggleBtn.MouseButton1Click:Connect(function()
+    updateFlyState(not flyActive)
+end)
+
+-- Hitbox Page
+local HitboxToggleBtn = createToggleButton("🎯 HITBOX: OFF", 5, pages.HitboxPage)
+local HitboxSizeInput = createInputField("Tamanho:", getgenv().HitboxSize, 55, pages.HitboxPage)
+local HitboxTransInput = createInputField("Transparência:", getgenv().HitboxTransparency, 95, pages.HitboxPage)
+local TeamCheckBtn = createToggleButton("👥 TEAM CHECK: OFF", 145, pages.HitboxPage)
+local function updateHitboxVisual()
+    HitboxToggleBtn.Text = getgenv().HitboxStatus and "🎯 HITBOX: ON" or "🎯 HITBOX: OFF"
+    HitboxToggleBtn.BackgroundColor3 = getgenv().HitboxStatus and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+end
+local function updateTeamCheckVisual()
+    TeamCheckBtn.Text = getgenv().TeamCheck and "👥 TEAM CHECK: ON" or "👥 TEAM CHECK: OFF"
+    TeamCheckBtn.BackgroundColor3 = getgenv().TeamCheck and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+end
+HitboxToggleBtn.MouseButton1Click:Connect(function()
+    getgenv().HitboxStatus = not getgenv().HitboxStatus
+    updateHitboxVisual()
+end)
+TeamCheckBtn.MouseButton1Click:Connect(function()
+    getgenv().TeamCheck = not getgenv().TeamCheck
+    updateTeamCheckVisual()
+end)
+
+-- Combat Page
+local AimbotZBtn = createToggleButton("🎯 AIMBOT (Z): OFF", 5, pages.CombatPage)
+local AimbotXBtn = createToggleButton("🎯 AIMBOT (X): OFF", 55, pages.CombatPage)
+local GrudaCBtn = createToggleButton("🔄 GRUDA (C): OFF", 105, pages.CombatPage)
+local SoruRBtn = createToggleButton("⚡ FAST SKILL (R)", 155, pages.CombatPage)
+local function updateCombatVisuals()
+    AimbotZBtn.Text = aimbotZ and "🎯 AIMBOT (Z): ON" or "🎯 AIMBOT (Z): OFF"
+    AimbotZBtn.BackgroundColor3 = aimbotZ and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    AimbotXBtn.Text = aimbotX and "🎯 AIMBOT (X): ON" or "🎯 AIMBOT (X): OFF"
+    AimbotXBtn.BackgroundColor3 = aimbotX and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    GrudaCBtn.Text = grudaC and "🔄 GRUDA (C): ON" or "🔄 GRUDA (C): OFF"
+    GrudaCBtn.BackgroundColor3 = grudaC and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+end
+AimbotZBtn.MouseButton1Click:Connect(function()
+    aimbotZ = not aimbotZ
+    updateCombatVisuals()
+    if aimbotZ then aimbotTarget = getClosestPlayer() else aimbotTarget = nil end
+end)
+AimbotXBtn.MouseButton1Click:Connect(function()
+    aimbotX = not aimbotX
+    updateCombatVisuals()
+    if aimbotX then aimbotTarget = getClosestPlayer() else aimbotTarget = nil end
+end)
+GrudaCBtn.MouseButton1Click:Connect(function()
+    grudaC = not grudaC
+    updateCombatVisuals()
+    if grudaC then aimbotTarget = getClosestPlayer() else aimbotTarget = nil end
+end)
+SoruRBtn.MouseButton1Click:Connect(function()
+    StarterGui:SetCore("SendNotification", {Title = "⚡ FAST SKILL", Text = "Pressione R para ativar!", Duration = 2})
+end)
+
+-- Utils Page
+local PingLabel = Instance.new("TextLabel")
+PingLabel.Size = UDim2.new(1, 0, 0, 30)
+PingLabel.Position = UDim2.new(0, 0, 0, 5)
+PingLabel.BackgroundTransparency = 1
+PingLabel.Text = "📶 Ping: 0 ms"
+PingLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+PingLabel.Font = Enum.Font.GothamBold
+PingLabel.TextSize = 16
+PingLabel.Parent = pages.UtilsPage
+
+local AutoClickBtn = createToggleButton("🖱️ AUTO CLICK: OFF", 45, pages.UtilsPage)
+local AutoClickIntervalInput = createInputField("Intervalo (s):", autoClickInterval, 95, pages.UtilsPage)
+local FastAttackBtn = createToggleButton("⚡ FAST ATTACK: OFF", 150, pages.UtilsPage)
+local FastAttackIntervalInput = createInputField("Intervalo (s):", fastAttackInterval, 200, pages.UtilsPage)
+
+local function updateAutoClickVisual()
+    AutoClickBtn.Text = autoClickActive and "🖱️ AUTO CLICK: ON" or "🖱️ AUTO CLICK: OFF"
+    AutoClickBtn.BackgroundColor3 = autoClickActive and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+end
+local function updateFastAttackVisual()
+    FastAttackBtn.Text = fastAttackActive and "⚡ FAST ATTACK: ON" or "⚡ FAST ATTACK: OFF"
+    FastAttackBtn.BackgroundColor3 = fastAttackActive and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+end
+AutoClickBtn.MouseButton1Click:Connect(function()
+    autoClickActive = not autoClickActive
+    updateAutoClickVisual()
+end)
+FastAttackBtn.MouseButton1Click:Connect(function()
+    fastAttackActive = not fastAttackActive
+    updateFastAttackVisual()
+end)
+AutoClickIntervalInput.FocusLost:Connect(function()
+    local val = tonumber(AutoClickIntervalInput.Text)
+    if val and val > 0 then autoClickInterval = val end
+end)
+FastAttackIntervalInput.FocusLost:Connect(function()
+    local val = tonumber(FastAttackIntervalInput.Text)
+    if val and val > 0 then fastAttackInterval = val end
+end)
+
+-- Optimization Page
+local optY = 5
+local OptParticlesBtn = createToggleButton("❄️ Reduzir Partículas: OFF", optY, pages.OptimizationPage); optY = optY + 50
+local OptFogBtn = createToggleButton("🌫️ Remover Névoa: OFF", optY, pages.OptimizationPage); optY = optY + 50
+local OptFPSInput = createInputField("Max FPS:", maxFPS, optY, pages.OptimizationPage); optY = optY + 45
+local OptDecorBtn = createToggleButton("🗑️ Remover Decorações: OFF", optY, pages.OptimizationPage); optY = optY + 50
+local OptWaterBtn = createToggleButton("💧 Remover Efeitos Água: OFF", optY, pages.OptimizationPage); optY = optY + 50
+local OptShadowsBtn = createToggleButton("🌑 Desativar Sombras: OFF", optY, pages.OptimizationPage); optY = optY + 50
+local OptAnimBtn = createToggleButton("🎬 Desativar Animações: OFF", optY, pages.OptimizationPage); optY = optY + 50
+
+local function updateOptVisuals()
+    OptParticlesBtn.Text = reduceParticles and "❄️ Reduzir Partículas: ON" or "❄️ Reduzir Partículas: OFF"
+    OptParticlesBtn.BackgroundColor3 = reduceParticles and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    OptFogBtn.Text = removeFog and "🌫️ Remover Névoa: ON" or "🌫️ Remover Névoa: OFF"
+    OptFogBtn.BackgroundColor3 = removeFog and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    OptDecorBtn.Text = removeDecorations and "🗑️ Remover Decorações: ON" or "🗑️ Remover Decorações: OFF"
+    OptDecorBtn.BackgroundColor3 = removeDecorations and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    OptWaterBtn.Text = removeWaterEffects and "💧 Remover Efeitos Água: ON" or "💧 Remover Efeitos Água: OFF"
+    OptWaterBtn.BackgroundColor3 = removeWaterEffects and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    OptShadowsBtn.Text = disableShadows and "🌑 Desativar Sombras: ON" or "🌑 Desativar Sombras: OFF"
+    OptShadowsBtn.BackgroundColor3 = disableShadows and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    OptAnimBtn.Text = disableAnimations and "🎬 Desativar Animações: ON" or "🎬 Desativar Animações: OFF"
+    OptAnimBtn.BackgroundColor3 = disableAnimations and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+end
+
+OptParticlesBtn.MouseButton1Click:Connect(function()
+    reduceParticles = not reduceParticles
+    updateOptVisuals()
+end)
+OptFogBtn.MouseButton1Click:Connect(function()
+    removeFog = not removeFog
+    Lighting.FogEnd = removeFog and 0 or 100000
+    updateOptVisuals()
+end)
+OptFPSInput.FocusLost:Connect(function()
+    local val = tonumber(OptFPSInput.Text)
+    if val and val > 0 then maxFPS = val end
+end)
+OptDecorBtn.MouseButton1Click:Connect(function()
+    removeDecorations = not removeDecorations
+    updateOptVisuals()
+end)
+OptWaterBtn.MouseButton1Click:Connect(function()
+    removeWaterEffects = not removeWaterEffects
+    updateOptVisuals()
+end)
+OptShadowsBtn.MouseButton1Click:Connect(function()
+    disableShadows = not disableShadows
+    Workspace.GlobalShadows = not disableShadows
+    updateOptVisuals()
+end)
+OptAnimBtn.MouseButton1Click:Connect(function()
+    disableAnimations = not disableAnimations
+    updateOptVisuals()
+end)
+
+-- Visual Page
+local visY = 5
+local ChamsBtn = createToggleButton("🌈 CHAMS: OFF", visY, pages.VisualPage); visY = visY + 50
+local WireframeBtn = createToggleButton("🔲 WIREFRAME: OFF", visY, pages.VisualPage); visY = visY + 50
+local ZoomInput = createInputField("Zoom (1-10):", zoomLevel, visY, pages.VisualPage); visY = visY + 45
+local FOVInput = createInputField("FOV (10-120):", fovLevel, visY, pages.VisualPage); visY = visY + 45
+
+local function updateVisualVisuals()
+    ChamsBtn.Text = chamsEnabled and "🌈 CHAMS: ON" or "🌈 CHAMS: OFF"
+    ChamsBtn.BackgroundColor3 = chamsEnabled and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    WireframeBtn.Text = wireframeEnabled and "🔲 WIREFRAME: ON" or "🔲 WIREFRAME: OFF"
+    WireframeBtn.BackgroundColor3 = wireframeEnabled and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+end
+
+ChamsBtn.MouseButton1Click:Connect(function()
+    chamsEnabled = not chamsEnabled
+    updateVisualVisuals()
+end)
+WireframeBtn.MouseButton1Click:Connect(function()
+    wireframeEnabled = not wireframeEnabled
+    updateVisualVisuals()
+end)
+ZoomInput.FocusLost:Connect(function()
+    local val = tonumber(ZoomInput.Text)
+    if val and val >= 1 and val <= 10 then zoomLevel = val end
+end)
+FOVInput.FocusLost:Connect(function()
+    local val = tonumber(FOVInput.Text)
+    if val and val >= 10 and val <= 120 then fovLevel = val end
+end)
+
+-- Misc extras na página Utils
+local extraY = 250
+local AntiAFKBtn = createToggleButton("🛡️ ANTI-AFK: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
+local AutoFarmBtn = createToggleButton("🌾 AUTO-FARM: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
+local GodModeBtn = createToggleButton("💀 GOD MODE: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
+local InfiniteJumpBtn = createToggleButton("🦘 INFINITE JUMP: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
+local SpeedHackBtn = createToggleButton("💨 SPEED HACK: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
+local SpeedHackInput = createInputField("Speed Value:", speedHackValue, extraY, pages.UtilsPage); extraY = extraY + 45
+
+local function updateMiscVisuals()
+    AntiAFKBtn.Text = antiAFK and "🛡️ ANTI-AFK: ON" or "🛡️ ANTI-AFK: OFF"
+    AntiAFKBtn.BackgroundColor3 = antiAFK and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    AutoFarmBtn.Text = autoFarm and "🌾 AUTO-FARM: ON" or "🌾 AUTO-FARM: OFF"
+    AutoFarmBtn.BackgroundColor3 = autoFarm and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    GodModeBtn.Text = godMode and "💀 GOD MODE: ON" or "💀 GOD MODE: OFF"
+    GodModeBtn.BackgroundColor3 = godMode and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    InfiniteJumpBtn.Text = infiniteJump and "🦘 INFINITE JUMP: ON" or "🦘 INFINITE JUMP: OFF"
+    InfiniteJumpBtn.BackgroundColor3 = infiniteJump and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+    SpeedHackBtn.Text = speedHack and "💨 SPEED HACK: ON" or "💨 SPEED HACK: OFF"
+    SpeedHackBtn.BackgroundColor3 = speedHack and Color3.fromRGB(60, 0, 0) or Color3.fromRGB(15, 0, 0)
+end
+
+AntiAFKBtn.MouseButton1Click:Connect(function()
+    antiAFK = not antiAFK
+    updateMiscVisuals()
+end)
+AutoFarmBtn.MouseButton1Click:Connect(function()
+    autoFarm = not autoFarm
+    updateMiscVisuals()
+end)
+GodModeBtn.MouseButton1Click:Connect(function()
+    godMode = not godMode
+    updateMiscVisuals()
+end)
+InfiniteJumpBtn.MouseButton1Click:Connect(function()
+    infiniteJump = not infiniteJump
+    updateMiscVisuals()
+end)
+SpeedHackBtn.MouseButton1Click:Connect(function()
+    speedHack = not speedHack
+    updateMiscVisuals()
+end)
+SpeedHackInput.FocusLost:Connect(function()
+    local val = tonumber(SpeedHackInput.Text)
+    if val and val > 0 then speedHackValue = val end
+end)
+
+-- ==========================================
+-- LOGIN (com destruição do Background)
+-- ==========================================
+LoginBtn.MouseButton1Click:Connect(function()
+    if KeyInput.Text == CorrectKey then
+        -- Destrói o tema de fundo (rosto feliz + partículas)
+        if Background then Background:Destroy() end
+
+        StatusText.Text = "✅ KEY CORRETA! Carregando..."
+        StatusText.TextColor3 = Color3.fromRGB(50, 255, 50)
+        TweenService:Create(KeyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
+        task.wait(0.3)
+        KeyFrame.Visible = false
+        animateMainIn()
+        StarterGui:SetCore("SendNotification", {Title = "⚡ DARK PREMIUM", Text = "Key Correta! Bem-vindo!", Duration = 3})
+    else
+        StatusText.Text = "❌ KEY INCORRETA! Tente novamente."
+        StatusText.TextColor3 = Color3.fromRGB(255, 0, 0)
+        TweenService:Create(KeyFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Position = UDim2.new(0.5, -260, 0.5, -100)}):Play()
+        task.wait(0.1)
+        TweenService:Create(KeyFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Position = UDim2.new(0.5, -240, 0.5, -100)}):Play()
+        task.wait(0.1)
+        TweenService:Create(KeyFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Position = UDim2.new(0.5, -250, 0.5, -100)}):Play()
+        KeyInput.Text = ""
+        task.wait(1)
+        StatusText.Text = "🔑 Aguardando chave..."
+        StatusText.TextColor3 = Color3.fromRGB(255, 200, 100)
+    end
+end)
+KeyInput:GetPropertyChangedSignal("Text"):Connect(function()
+    if KeyInput.Text == CorrectKey then LoginBtn.MouseButton1Click:Fire() end
+end)
+
+-- ==========================================
+-- ESP SISTEMA
+-- ==========================================
+local function getColor(plr)
+    if plr.Team and player.Team and plr.Team == player.Team then return Color3.fromRGB(255, 40, 40) end
+    return Color3.fromRGB(255, 50, 50)
+end
+local function createEsp(plr)
+    if plr == player then return end
+    local folder = Instance.new("Folder")
+    folder.Name = "ESP_" .. plr.Name
+    folder.Parent = guiParent
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "Highlight"
+    highlight.FillTransparency = 0.5
+    highlight.OutlineTransparency = 0
+    highlight.Parent = folder
+    local billboard = Instance.new("BillboardGui")
+    billboard.Name = "NameTag"
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.Adornee = nil
+    billboard.AlwaysOnTop = true
+    billboard.Parent = folder
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(1, 0, 1, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.TextColor3 = Color3.new(1, 1, 1)
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextSize = 12
+    nameLabel.TextStrokeTransparency = 0
+    nameLabel.Parent = billboard
+    local function update()
+        if espEnabled and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
+            highlight.Adornee = plr.Character
+            highlight.FillColor = getColor(plr)
+            billboard.Adornee = plr.Character:FindFirstChild("Head")
+            billboard.Enabled = true
+            nameLabel.Text = plr.Name .. " [" .. math.floor(plr.Character.Humanoid.Health) .. "]"
+            nameLabel.TextColor3 = getColor(plr)
+        else
+            highlight.Adornee = nil
+            billboard.Enabled = false
+        end
+    end
+    RunService.RenderStepped:Connect(update)
+end
+for _, p in ipairs(Players:GetPlayers()) do createEsp(p) end
+Players.PlayerAdded:Connect(createEsp)
+
+-- ==========================================
+-- FUNÇÕES DE COMBATE
+-- ==========================================
+local function getClosestPlayer()
+    local closestDist = math.huge
+    local closestPlr = nil
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= player and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+            if not getgenv().TeamCheck or (v.Team ~= player.Team) then
+                local pos, onScreen = camera:WorldToViewportPoint(v.Character.HumanoidRootPart.Position)
+                if onScreen then
+                    local mousePos = UserInputService:GetMouseLocation()
+                    local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
+                    if dist < closestDist then
+                        closestDist = dist
+                        closestPlr = v
+                    end
+                end
+            end
+        end
+    end
+    return closestPlr
+end
+
+-- ==========================================
+-- Sincronização de inputs
+-- ==========================================
+local function ResetJump()
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.JumpPower = 50
+        player.Character.Humanoid.UseJumpPower = true
+    end
+end
+ResetJump()
+player.CharacterAdded:Connect(ResetJump)
+
+GlitchSpeedInput.FocusLost:Connect(function() getgenv().GlideSpeed = tonumber(GlitchSpeedInput.Text) or getgenv().GlideSpeed end)
+GlitchDurInput.FocusLost:Connect(function() getgenv().GlideTime = tonumber(GlitchDurInput.Text) or getgenv().GlideTime end)
+JumpPowerInput.FocusLost:Connect(function() JumpForce = tonumber(JumpPowerInput.Text) or JumpForce end)
+FlySpeedInput.FocusLost:Connect(function() flySpeed = tonumber(FlySpeedInput.Text) or flySpeed end)
+HitboxSizeInput.FocusLost:Connect(function() getgenv().HitboxSize = tonumber(HitboxSizeInput.Text) or getgenv().HitboxSize end)
+HitboxTransInput.FocusLost:Connect(function() getgenv().HitboxTransparency = tonumber(HitboxTransInput.Text) or getgenv().HitboxTransparency end)
+
+-- ==========================================
+-- GLITCH DETECTION
+-- ==========================================
+local function SetupToolDetection(character)
+    character.ChildAdded:Connect(function(child)
+        if child:IsA("Tool") and (string.find(child.Name, "Soul") or string.find(child.Name, "Guitar")) then
+            child.Activated:Connect(function()
+                if not getgenv().GlideEnabled then return end
+                LastShootTime = tick()
+            end)
+        end
+    end)
+end
+if player.Character then SetupToolDetection(player.Character) end
+player.CharacterAdded:Connect(SetupToolDetection)
+
+-- ==========================================
+-- INPUTS PRINCIPAIS
+-- ==========================================
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.K then
+        uiVisible = not uiVisible
+        MainFrame.Visible = uiVisible
+    end
+    if input.KeyCode == Enum.KeyCode.H then
+        updateFlyState(not flyActive)
+    end
+    if input.KeyCode == Enum.KeyCode.B then
+        espEnabled = not espEnabled
+        updateEspVisual()
+    end
+    if input.KeyCode == Enum.KeyCode.G then
+        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local hrp = player.Character.HumanoidRootPart
+            hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
+            hrp.Velocity = hrp.Velocity + Vector3.new(0, JumpForce, 0)
+        end
+    end
+    if input.KeyCode == Enum.KeyCode.Z then
+        aimbotZ = not aimbotZ
+        updateCombatVisuals()
+        if aimbotZ then aimbotTarget = getClosestPlayer() else aimbotTarget = nil end
+    end
+    if input.KeyCode == Enum.KeyCode.X then
+        aimbotX = not aimbotX
+        updateCombatVisuals()
+        if aimbotX then aimbotTarget = getClosestPlayer() else aimbotTarget = nil end
+    end
+    if input.KeyCode == Enum.KeyCode.C then
+        grudaC = not grudaC
+        updateCombatVisuals()
+        if grudaC then aimbotTarget = getClosestPlayer() else aimbotTarget = nil end
+    end
+    if input.KeyCode == Enum.KeyCode.R then
+        VirtualInputManager:SendMouseButtonEvent(1051, 927, 0, true, game, 1)
+        VirtualInputManager:SendMouseButtonEvent(1051, 927, 0, false, game, 1)
+    end
+end)
+
+-- ==========================================
+-- LOOPS PRINCIPAIS
+-- ==========================================
+
+RunService.RenderStepped:Connect(function()
+    -- Ping
+    pingDisplay = player:GetNetworkPing() * 1000
+    PingLabel.Text = string.format("📶 Ping: %.0f ms", pingDisplay)
+
+    -- Fly
+    if flyActive and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local root = player.Character.HumanoidRootPart
+        if not FlyVel or FlyVel.Parent ~= root then
+            if FlyVel then FlyVel:Destroy() end
+            FlyVel = Instance.new("BodyVelocity")
+            FlyVel.Name = "SkyFly"
+            FlyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+            FlyVel.Parent = root
+        end
+        local moveDirection = Vector3.zero
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - camera.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - camera.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + camera.CFrame.RightVector end
+        FlyVel.Velocity = moveDirection * flySpeed
+    end
+
+    -- Aimbot
+    if (aimbotZ or aimbotX) and aimbotTarget and aimbotTarget.Character and aimbotTarget.Character:FindFirstChild("HumanoidRootPart") then
+        camera.CFrame = CFrame.new(camera.CFrame.Position, aimbotTarget.Character.HumanoidRootPart.Position)
+    end
+    -- Gruda
+    if grudaC and aimbotTarget and aimbotTarget.Character and aimbotTarget.Character:FindFirstChild("HumanoidRootPart") and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local targetHRP = aimbotTarget.Character.HumanoidRootPart
+        player.Character.HumanoidRootPart.CFrame = targetHRP.CFrame * CFrame.new(0, 0, 2)
+    end
+
+    -- Hitbox
+    if getgenv().HitboxStatus == true then
+        for i,v in next, Players:GetPlayers() do
+            if v ~= player then
+                local onSameTeam = (v.Team ~= nil and player.Team ~= nil and v.Team == player.Team)
+                if not getgenv().TeamCheck or (getgenv().TeamCheck and not onSameTeam) then
+                    pcall(function()
+                        local hrp = v.Character.HumanoidRootPart
+                        hrp.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
+                        hrp.Transparency = getgenv().HitboxTransparency
+                        hrp.BrickColor = BrickColor.new("Really red")
+                        hrp.Material = "Neon"
+                        hrp.CanCollide = false
+                    end)
+                end
+            end
+        end
+    else
+        for i,v in next, Players:GetPlayers() do
+            if v ~= player then
+                pcall(function()
+                    local hrp = v.Character.HumanoidRootPart
+                    hrp.Size = Vector3.new(2,2,1)
+                    hrp.Transparency = 1
+                end)
+            end
+        end
+    end
+
+    -- Visual: Zoom / FOV
+    if camera then
+        camera.FieldOfView = fovLevel
+    end
+
+    -- Chams
+    if chamsEnabled then
+        for i,v in next, Players:GetPlayers() do
+            if v ~= player and v.Character then
+                pcall(function()
+                    for _, part in ipairs(v.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.Color = chamsColor
+                            part.Material = "Neon"
+                            part.Transparency = 0.3
+                        end
+                    end
+                end)
+            end
+        end
+    end
+
+    -- Wireframe
+    if wireframeEnabled then
+        for i,v in next, Players:GetPlayers() do
+            if v ~= player and v.Character then
+                pcall(function()
+                    for _, part in ipairs(v.Character:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.Material = "ForceField"
+                        end
+                    end
+                end)
+            end
+        end
+    end
+
+    -- Anti-AFK
+    if antiAFK then
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.W, false, game)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.W, false, game)
+    end
+
+    -- God Mode
+    if godMode and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.Health = 100
+        player.Character.Humanoid.MaxHealth = 100
+    end
+
+    -- Infinite Jump
+    if infiniteJump and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.UseJumpPower = true
+        player.Character.Humanoid.JumpPower = 1000
+    else
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.JumpPower = 50
+        end
+    end
+
+    -- Speed Hack
+    if speedHack and player.Character and player.Character:FindFirstChild("Humanoid") then
+        player.Character.Humanoid.WalkSpeed = speedHackValue
+    else
+        if player.Character and player.Character:FindFirstChild("Humanoid") then
+            player.Character.Humanoid.WalkSpeed = 16
+        end
+    end
+end)
+
+-- Loop Glitch
+RunService.Heartbeat:Connect(function()
+    if not getgenv().GlideEnabled then return end
+    local char = player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
+        local hrp = char.HumanoidRootPart
+        local hum = char.Humanoid
+        if (tick() - LastShootTime < 1.5) and hrp.Velocity.Magnitude > 20 then
+            if hrp:FindFirstChild("OmniGlide") then hrp.OmniGlide:Destroy() end
+            local CurrentBV = Instance.new("BodyVelocity")
+            CurrentBV.Name = "OmniGlide"
+            CurrentBV.MaxForce = Vector3.new(100000, 0, 100000)
+            local Dir = hum.MoveDirection
+            if Dir.Magnitude == 0 then
+                local cameraLook = camera.CFrame.LookVector
+                Dir = Vector3.new(cameraLook.X, 0, cameraLook.Z).Unit
+            else
+                Dir = Dir.Unit
+            end
+            CurrentBV.Velocity = Dir * getgenv().GlideSpeed
+            CurrentBV.Parent = hrp
+            Debris:AddItem(CurrentBV, getgenv().GlideTime)
+            LastShootTime = 0
+        end
+    end
+end)
+
+-- Auto Click e Fast Attack
+task.spawn(function()
+    while true do
+        task.wait(0.05)
+        if autoClickActive then
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+            task.wait(autoClickInterval)
+        end
+        if fastAttackActive then
+            VirtualInputManager:SendMouseButtonEvent(1051, 927, 0, true, game, 1)
+            VirtualInputManager:SendMouseButtonEvent(1051, 927, 0, false, game, 1)
+            task.wait(fastAttackInterval)
+        end
+    end
+end)
+
+-- Notificação inicial
+StarterGui:SetCore("SendNotification", {
+    Title = "⚡ DARKNESSXY REI DO MATCHA MATRIX",
+    Text = "Digite a Key no painel para acessar!",
+    Duration = 4
+})
