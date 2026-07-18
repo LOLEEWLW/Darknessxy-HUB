@@ -1,10 +1,72 @@
 --[[
     DARK PREMIUM - VERSÃO ULTRA HD EXTREME (REVISITED)
-    Sistema de Key com visual clean (preto/branco)
+    Sistema de Key + HWID integrado ao Google Sheets
     Tema: Dark + Aimbot com seleção de alvo
     MEGA UPDATE: Painel 600x750, + abas, + opções de otimização, visual, misc
+    MOD: Botão flutuante móvel (arrastável com o mouse)
 ]]
 
+-- ==========================================
+-- CONFIGURAÇÃO DO SISTEMA DE KEY (GOOGLE)
+-- ==========================================
+local API_URL = "https://script.google.com/macros/s/AKfycbyZmi87fuz8CS4201TLVYIb-9S8Hl2YFBw_F7st_M3EKNEzMPkz3w-T0f3GyXy8_x78/exec"
+
+-- Função para obter HWID (compatível com vários exploits)
+local function getHWID()
+    local success, result = pcall(function()
+        if syn and syn.crypt and syn.crypt.custom and syn.crypt.custom.hash then
+            return syn.crypt.custom.hash("DARK_PREMIUM_HWID_SALT")
+        end
+    end)
+    if success and result then return result end
+
+    success, result = pcall(function()
+        if getgenv().request or request then
+            local http = getgenv().request or request
+            return game:GetService("RbxAnalyticsService"):GetClientId()
+        end
+    end)
+    if success and result then return result end
+
+    -- Fallback
+    return game:GetService("RbxAnalyticsService"):GetClientId() .. "-" .. game.PlaceId
+end
+
+-- Função que valida key + hwid no Google Sheets
+local function validarKeyNoServidor(key, hwid)
+    local url = API_URL .. "?action=validar&key=" .. tostring(key)
+    if hwid and hwid ~= "" then
+        url = url .. "&hwid=" .. tostring(hwid)
+    end
+    
+    local success, response = pcall(function()
+        return syn.request({Url = url, Method = "GET"})
+    end)
+    
+    if not success then
+        success, response = pcall(function()
+            return (getgenv().request or request)({Url = url, Method = "GET"})
+        end)
+    end
+    
+    if not success then
+        return false, "Erro ao conectar com o servidor"
+    end
+    
+    local success2, data = pcall(function()
+        return game:GetService("HttpService"):JSONDecode(response.Body)
+    end)
+    
+    if not success2 then
+        return false, "Erro ao processar resposta"
+    end
+    
+    return data.valida, data.motivo
+end
+
+-- ==========================================
+-- SERVIÇOS E VARIÁVEIS
+-- ==========================================
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -15,14 +77,10 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
+local HttpService = game:GetService("HttpService")
 
 local player = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
-
--- ==========================================
--- SISTEMA DE KEY (LOGIN) - VISUAL CLEAN
--- ==========================================
-local CorrectKey = "DRKPREMIUM"
 
 local guiParent = (gethui and gethui()) or CoreGui
 
@@ -60,7 +118,7 @@ getgenv().HitboxTransparency = 0.9
 getgenv().HitboxStatus = false
 getgenv().TeamCheck = false
 
--- AIMBOT (novo)
+-- AIMBOT
 local aimbotActive = false
 local aimbotTarget = nil
 
@@ -96,53 +154,43 @@ local pingDisplay = 0
 -- ==========================================
 -- FUNDO ANIMADO COM ROSTO FELIZ + PARTÍCULAS
 -- ==========================================
-
-local Background = nil
-
--- Frame de fundo escuro com gradiente
-Background = Instance.new("Frame")
+local Background = Instance.new("Frame")
 Background.Size = UDim2.new(1, 0, 1, 0)
 Background.BackgroundColor3 = Color3.fromRGB(8, 0, 0)
 Background.BackgroundTransparency = 0.4
 Background.Parent = ScreenGui
 
--- Gradiente (usando um ImageLabel com gradiente feito no momento)
 local gradient = Instance.new("ImageLabel")
 gradient.Size = UDim2.new(1, 0, 1, 0)
 gradient.BackgroundTransparency = 1
-gradient.Image = "rbxassetid://1461692487" -- gradiente preto-vermelho
+gradient.Image = "rbxassetid://1461692487"
 gradient.ImageColor3 = Color3.fromRGB(50, 0, 0)
 gradient.ImageTransparency = 0.5
 gradient.Parent = Background
 
--- ===== ROSTO FELIZ ANIMADO =====
+-- Rosto feliz animado
 local FaceFrame = Instance.new("Frame")
 FaceFrame.Size = UDim2.new(0, 120, 0, 120)
 FaceFrame.Position = UDim2.new(0.5, -60, 0.5, -60)
 FaceFrame.BackgroundTransparency = 1
 FaceFrame.Parent = Background
 
--- Olho esquerdo
 local EyeL = Instance.new("Frame")
 EyeL.Size = UDim2.new(0, 18, 0, 18)
 EyeL.Position = UDim2.new(0.25, -9, 0.3, -9)
 EyeL.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-EyeL.BackgroundTransparency = 0
 EyeL.BorderSizePixel = 0
 EyeL.Parent = FaceFrame
 Instance.new("UICorner", EyeL).CornerRadius = UDim.new(1, 0)
 
--- Olho direito
 local EyeR = Instance.new("Frame")
 EyeR.Size = UDim2.new(0, 18, 0, 18)
 EyeR.Position = UDim2.new(0.75, -9, 0.3, -9)
 EyeR.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-EyeR.BackgroundTransparency = 0
 EyeR.BorderSizePixel = 0
 EyeR.Parent = FaceFrame
 Instance.new("UICorner", EyeR).CornerRadius = UDim.new(1, 0)
 
--- Pupila esquerda (menor)
 local PupilL = Instance.new("Frame")
 PupilL.Size = UDim2.new(0, 8, 0, 8)
 PupilL.Position = UDim2.new(0.3, -4, 0.35, -4)
@@ -151,7 +199,6 @@ PupilL.BorderSizePixel = 0
 PupilL.Parent = EyeL
 Instance.new("UICorner", PupilL).CornerRadius = UDim.new(1, 0)
 
--- Pupila direita
 local PupilR = Instance.new("Frame")
 PupilR.Size = UDim2.new(0, 8, 0, 8)
 PupilR.Position = UDim2.new(0.3, -4, 0.35, -4)
@@ -160,27 +207,22 @@ PupilR.BorderSizePixel = 0
 PupilR.Parent = EyeR
 Instance.new("UICorner", PupilR).CornerRadius = UDim.new(1, 0)
 
--- Boca (arco feliz) usando um Frame com ângulo
 local Mouth = Instance.new("Frame")
 Mouth.Size = UDim2.new(0, 50, 0, 25)
 Mouth.Position = UDim2.new(0.5, -25, 0.65, 0)
 Mouth.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
-Mouth.BackgroundTransparency = 0
 Mouth.BorderSizePixel = 0
 Mouth.Parent = FaceFrame
 Instance.new("UICorner", Mouth).CornerRadius = UDim.new(0, 20)
 
--- Animação do rosto (piscar e sorrir)
 task.spawn(function()
     while Background and Background.Parent do
-        -- Piscar (fechar olhos)
         TweenService:Create(EyeL, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 18, 0, 2)}):Play()
         TweenService:Create(EyeR, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 18, 0, 2)}):Play()
         task.wait(0.15)
         TweenService:Create(EyeL, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 18, 0, 18)}):Play()
         TweenService:Create(EyeR, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 18, 0, 18)}):Play()
         task.wait(3)
-        -- Sorrir mais (aumentar boca)
         TweenService:Create(Mouth, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 60, 0, 30)}):Play()
         task.wait(0.5)
         TweenService:Create(Mouth, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 50, 0, 25)}):Play()
@@ -188,11 +230,10 @@ task.spawn(function()
     end
 end)
 
--- ===== PARTÍCULAS (estrelas flutuantes) =====
+-- Partículas
 local Particles = Instance.new("Folder")
 Particles.Name = "Particles"
 Particles.Parent = Background
-
 for i = 1, 25 do
     local star = Instance.new("Frame")
     star.Size = UDim2.new(0, math.random(4, 10), 0, math.random(4, 10))
@@ -203,7 +244,6 @@ for i = 1, 25 do
     star.Parent = Particles
     Instance.new("UICorner", star).CornerRadius = UDim.new(1, 0)
 
-    -- Animação flutuante
     task.spawn(function()
         local startX = star.Position.X.Scale
         local startY = star.Position.Y.Scale
@@ -222,9 +262,8 @@ for i = 1, 25 do
 end
 
 -- ==========================================
--- FUNÇÕES DE ESTILO (SEM RGB)
+-- FUNÇÕES DE ESTILO
 -- ==========================================
-
 local function createStaticBorder(frame, thickness, color)
     thickness = thickness or 2
     color = color or Color3.fromRGB(150, 150, 150)
@@ -251,9 +290,8 @@ local function animateIn(instance, duration)
 end
 
 -- ==========================================
--- SISTEMA DE KEY (VISUAL CLEAN)
+-- SISTEMA DE KEY (VISUAL CLEAN) + VALIDAÇÃO ONLINE
 -- ==========================================
-
 local KeyFrame = Instance.new("Frame")
 KeyFrame.Size = UDim2.new(0, 0, 0, 0)
 KeyFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -337,9 +375,8 @@ StatusText.TextSize = 12
 StatusText.Parent = KeyFrame
 
 -- ==========================================
--- PAINEL PRINCIPAL - MEGA TAMANHO
+-- PAINEL PRINCIPAL
 -- ==========================================
-
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 0, 0, 0)
 MainFrame.Position = UDim2.new(0.02, 0, 0.05, 0)
@@ -363,7 +400,6 @@ TitleTop.Font = Enum.Font.GothamBlack
 TitleTop.TextSize = 30
 TitleTop.Parent = MainFrame
 
--- Animação de pulsação no título
 task.spawn(function()
     while MainFrame and MainFrame.Visible do
         TweenService:Create(TitleTop, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, 0, true, -1)):Play()
@@ -417,9 +453,8 @@ local function animateMainIn()
 end
 
 -- ==========================================
--- BARRA DE ABAS (8 ABAS - SUBSTITUÍDO COMBAT POR AIMBOT)
+-- BARRA DE ABAS
 -- ==========================================
-
 local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(0.95, 0, 0, 45)
 TabBar.Position = UDim2.new(0.025, 0, 0, 75)
@@ -451,12 +486,11 @@ local TabGlitchBtn = createTabButton("GLITCH", 0)
 local TabEspBtn = createTabButton("ESP", 0.125)
 local TabHitboxBtn = createTabButton("HITBOX", 0.25)
 local TabFlyBtn = createTabButton("FLY", 0.375)
-local TabAimbotBtn = createTabButton("AIMBOT", 0.5)   -- substitui Combat
+local TabAimbotBtn = createTabButton("AIMBOT", 0.5)
 local TabUtilsBtn = createTabButton("UTILS", 0.625)
 local TabOptBtn = createTabButton("OTIMIZ", 0.75)
 local TabVisualBtn = createTabButton("VISUAL", 0.875)
 
--- Páginas
 local Pages = Instance.new("Frame")
 Pages.Size = UDim2.new(1, 0, 0, 600)
 Pages.Position = UDim2.new(0, 0, 0, 130)
@@ -487,7 +521,7 @@ local function showPage(page)
     TabVisualBtn.BackgroundColor3 = (page == pages.VisualPage) and active or inactive
 end
 
-showPage(pages.AimbotPage) -- agora a primeira é Aimbot
+showPage(pages.AimbotPage)
 
 TabGlitchBtn.MouseButton1Click:Connect(function() showPage(pages.GlitchPage) end)
 TabEspBtn.MouseButton1Click:Connect(function() showPage(pages.EspPage) end)
@@ -501,7 +535,6 @@ TabVisualBtn.MouseButton1Click:Connect(function() showPage(pages.VisualPage) end
 -- ==========================================
 -- FUNÇÕES DE CRIAÇÃO DE ELEMENTOS
 -- ==========================================
-
 local function createInputField(labelText, defaultVal, yPos, parentPage)
     local Label = Instance.new("TextLabel")
     Label.Size = UDim2.new(0.5, 0, 0, 35)
@@ -556,7 +589,7 @@ local function createToggleButton(text, yPos, parentPage)
 end
 
 -- ==========================================
--- PÁGINAS (GLITCH, ESP, FLY, HITBOX, AIMBOT, UTILS, OTIMIZ, VISUAL)
+-- PÁGINAS (CONTEÚDO)
 -- ==========================================
 
 -- ESP Page
@@ -626,13 +659,8 @@ TeamCheckBtn.MouseButton1Click:Connect(function()
     updateTeamCheckVisual()
 end)
 
--- ==========================================
--- PÁGINA AIMBOT (NOVA)
--- ==========================================
-
+-- Aimbot Page
 local AimbotPage = pages.AimbotPage
-
--- Botão ativar/desativar aimbot
 local AimbotToggleBtn = createToggleButton("🔫 Aimbot: OFF", 5, AimbotPage)
 local function updateAimbotToggleVisual()
     AimbotToggleBtn.Text = aimbotActive and "🔫 Aimbot: ON" or "🔫 Aimbot: OFF"
@@ -643,7 +671,6 @@ AimbotToggleBtn.MouseButton1Click:Connect(function()
     updateAimbotToggleVisual()
 end)
 
--- Frame para a lista de players (com ScrollingFrame)
 local PlayerListFrame = Instance.new("Frame")
 PlayerListFrame.Size = UDim2.new(0.9, 0, 0, 400)
 PlayerListFrame.Position = UDim2.new(0.05, 0, 0, 55)
@@ -665,21 +692,17 @@ PlayerListLayout.Padding = UDim.new(0, 4)
 PlayerListLayout.SortOrder = Enum.SortOrder.Name
 PlayerListLayout.Parent = ScrollingFrame
 
--- Atualiza a lista de players
 local playerButtons = {}
 local selectedPlayerButton = nil
 
 local function updateAimbotList()
-    -- Limpa os botões antigos
     for _, btn in ipairs(playerButtons) do
         btn:Destroy()
     end
     playerButtons = {}
     selectedPlayerButton = nil
-
-    local playersList = Players:GetPlayers()
     local yOffset = 0
-    for _, plr in ipairs(playersList) do
+    for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= player then
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(1, 0, 0, 30)
@@ -691,38 +714,29 @@ local function updateAimbotList()
             btn.Parent = ScrollingFrame
             Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
             createStaticBorder(btn, 1, Color3.fromRGB(150, 150, 150))
-            
-            -- Dados do player
             btn.MouseButton1Click:Connect(function()
                 aimbotTarget = plr
-                -- Destacar o botão selecionado
                 if selectedPlayerButton then
                     selectedPlayerButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 end
                 btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
                 selectedPlayerButton = btn
-                -- Notificação
                 StarterGui:SetCore("SendNotification", {
                     Title = "🎯 Alvo selecionado",
                     Text = "Mirando em " .. plr.Name,
                     Duration = 2
                 })
             end)
-
             table.insert(playerButtons, btn)
             yOffset = yOffset + 34
         end
     end
     ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, yOffset)
 end
-
--- Atualiza quando um player entra ou sai
 Players.PlayerAdded:Connect(updateAimbotList)
 Players.PlayerRemoving:Connect(updateAimbotList)
--- Atualiza inicialmente
 updateAimbotList()
 
--- Botão para limpar alvo
 local ClearTargetBtn = Instance.new("TextButton")
 ClearTargetBtn.Size = UDim2.new(0.4, 0, 0, 30)
 ClearTargetBtn.Position = UDim2.new(0.05, 0, 0, 465)
@@ -753,10 +767,7 @@ ClearTargetBtn.MouseButton1Click:Connect(function()
     })
 end)
 
--- ==========================================
--- PÁGINA UTILS (com Auto Click, Fast Attack, Misc)
--- ==========================================
-
+-- Utils Page
 local PingLabel = Instance.new("TextLabel")
 PingLabel.Size = UDim2.new(1, 0, 0, 30)
 PingLabel.Position = UDim2.new(0, 0, 0, 5)
@@ -797,7 +808,6 @@ FastAttackIntervalInput.FocusLost:Connect(function()
     if val and val > 0 then fastAttackInterval = val end
 end)
 
--- Misc extras na página Utils
 local extraY = 250
 local AntiAFKBtn = createToggleButton("🛡️ ANTI-AFK: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
 local AutoFarmBtn = createToggleButton("🌾 AUTO-FARM: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
@@ -844,10 +854,7 @@ SpeedHackInput.FocusLost:Connect(function()
     if val and val > 0 then speedHackValue = val end
 end)
 
--- ==========================================
--- PÁGINA OTIMIZAÇÃO
--- ==========================================
-
+-- Optimization Page
 local optY = 5
 local OptParticlesBtn = createToggleButton("❄️ Reduzir Partículas: OFF", optY, pages.OptimizationPage); optY = optY + 50
 local OptFogBtn = createToggleButton("🌫️ Remover Névoa: OFF", optY, pages.OptimizationPage); optY = optY + 50
@@ -903,10 +910,7 @@ OptAnimBtn.MouseButton1Click:Connect(function()
     updateOptVisuals()
 end)
 
--- ==========================================
--- PÁGINA VISUAL
--- ==========================================
-
+-- Visual Page
 local visY = 5
 local ChamsBtn = createToggleButton("🌈 CHAMS: OFF", visY, pages.VisualPage); visY = visY + 50
 local WireframeBtn = createToggleButton("🔲 WIREFRAME: OFF", visY, pages.VisualPage); visY = visY + 50
@@ -938,22 +942,109 @@ FOVInput.FocusLost:Connect(function()
 end)
 
 -- ==========================================
--- LOGIN (com destruição do Background)
+-- BOTÃO FLUTUANTE (COM ARRASTE MANUAL)
+-- ==========================================
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 55, 0, 55)
+ToggleButton.Position = UDim2.new(0.02, 0, 0.9, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+ToggleButton.BackgroundTransparency = 0.2
+ToggleButton.Text = "⚡"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 24
+ToggleButton.Parent = ScreenGui
+ToggleButton.Visible = false
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
+createStaticBorder(ToggleButton, 2.5, Color3.fromRGB(150, 150, 150))
+
+-- Variáveis para arraste
+local dragging = false
+local dragStartMouse = nil
+local dragStartPosition = nil
+
+ToggleButton.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStartMouse = Vector2.new(input.Position.X, input.Position.Y)
+        dragStartPosition = ToggleButton.Position
+        -- Previne que o clique seja processado como click se houve arraste
+        ToggleButton.Dragging = true
+    end
+end)
+
+ToggleButton.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = Vector2.new(input.Position.X, input.Position.Y) - dragStartMouse
+        -- Converte delta para escala
+        local screenSize = ScreenGui.AbsoluteSize
+        local deltaScaleX = delta.X / screenSize.X
+        local deltaScaleY = delta.Y / screenSize.Y
+
+        local newX = math.clamp(dragStartPosition.X.Scale + deltaScaleX, 0, 1 - ToggleButton.Size.X.Scale)
+        local newY = math.clamp(dragStartPosition.Y.Scale + deltaScaleY, 0, 1 - ToggleButton.Size.Y.Scale)
+
+        ToggleButton.Position = UDim2.new(newX, 0, newY, 0)
+    end
+end)
+
+ToggleButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 and dragging then
+        dragging = false
+        -- Se o mouse não se moveu muito, considera como clique
+        local dist = (Vector2.new(input.Position.X, input.Position.Y) - dragStartMouse).Magnitude
+        if dist < 10 then
+            -- Ação de clique: alternar visibilidade
+            uiVisible = not uiVisible
+            MainFrame.Visible = uiVisible
+        end
+    end
+end)
+
+-- Efeitos hover (não interferem no arraste)
+ToggleButton.MouseEnter:Connect(function()
+    TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(60, 60, 60),
+        Size = UDim2.new(0, 60, 0, 60)
+    }):Play()
+end)
+ToggleButton.MouseLeave:Connect(function()
+    TweenService:Create(ToggleButton, TweenInfo.new(0.2), {
+        BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+        Size = UDim2.new(0, 55, 0, 55)
+    }):Play()
+end)
+
+-- ==========================================
+-- LOGIN COM VALIDAÇÃO NO SERVIDOR + HWID
 -- ==========================================
 LoginBtn.MouseButton1Click:Connect(function()
-    if KeyInput.Text == CorrectKey then
-        -- Destrói o tema de fundo (rosto feliz + partículas)
+    local key = KeyInput.Text
+    if key == "" then
+        StatusText.Text = "❌ Digite uma key!"
+        StatusText.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    StatusText.Text = "🔄 Verificando key e HWID..."
+    StatusText.TextColor3 = Color3.fromRGB(255, 255, 150)
+    
+    local hwid = getHWID()
+    local valida, motivo = validarKeyNoServidor(key, hwid)
+    
+    if valida then
         if Background then Background:Destroy() end
-
-        StatusText.Text = "✅ KEY CORRETA! Carregando..."
+        StatusText.Text = "✅ Key válida! Carregando..."
         StatusText.TextColor3 = Color3.fromRGB(200, 255, 200)
         TweenService:Create(KeyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
         task.wait(0.3)
         KeyFrame.Visible = false
         animateMainIn()
-        StarterGui:SetCore("SendNotification", {Title = "⚡ DARK PREMIUM", Text = "Key Correta! Bem-vindo!", Duration = 3})
+        ToggleButton.Visible = true
+        StarterGui:SetCore("SendNotification", {Title = "⚡ DARK PREMIUM", Text = "Key ativada com sucesso! HWID vinculado.", Duration = 3})
     else
-        StatusText.Text = "❌ KEY INCORRETA! Tente novamente."
+        StatusText.Text = "❌ " .. (motivo or "Key inválida")
         StatusText.TextColor3 = Color3.fromRGB(255, 100, 100)
         TweenService:Create(KeyFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Position = UDim2.new(0.5, -260, 0.5, -100)}):Play()
         task.wait(0.1)
@@ -965,9 +1056,6 @@ LoginBtn.MouseButton1Click:Connect(function()
         StatusText.Text = "🔑 Aguardando chave..."
         StatusText.TextColor3 = Color3.fromRGB(200, 200, 200)
     end
-end)
-KeyInput:GetPropertyChangedSignal("Text"):Connect(function()
-    if KeyInput.Text == CorrectKey then LoginBtn.MouseButton1Click:Fire() end
 end)
 
 -- ==========================================
@@ -1020,7 +1108,7 @@ for _, p in ipairs(Players:GetPlayers()) do createEsp(p) end
 Players.PlayerAdded:Connect(createEsp)
 
 -- ==========================================
--- Sincronização de inputs
+-- SINCRONIZAÇÃO DE INPUTS
 -- ==========================================
 local function ResetJump()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
@@ -1055,14 +1143,10 @@ if player.Character then SetupToolDetection(player.Character) end
 player.CharacterAdded:Connect(SetupToolDetection)
 
 -- ==========================================
--- INPUTS PRINCIPAIS (sem Z, X, C, R)
+-- INPUTS PRINCIPAIS (TECLAS DE ATALHO)
 -- ==========================================
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
-    if input.KeyCode == Enum.KeyCode.K then
-        uiVisible = not uiVisible
-        MainFrame.Visible = uiVisible
-    end
     if input.KeyCode == Enum.KeyCode.H then
         updateFlyState(not flyActive)
     end
@@ -1082,7 +1166,6 @@ end)
 -- ==========================================
 -- LOOPS PRINCIPAIS
 -- ==========================================
-
 RunService.RenderStepped:Connect(function()
     -- Ping
     pingDisplay = player:GetNetworkPing() * 1000
@@ -1106,7 +1189,7 @@ RunService.RenderStepped:Connect(function()
         FlyVel.Velocity = moveDirection * flySpeed
     end
 
-    -- Aimbot (novo)
+    -- Aimbot
     if aimbotActive and aimbotTarget and aimbotTarget.Character and aimbotTarget.Character:FindFirstChild("HumanoidRootPart") then
         camera.CFrame = CFrame.new(camera.CFrame.Position, aimbotTarget.Character.HumanoidRootPart.Position)
     end
@@ -1140,12 +1223,11 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Visual: Zoom / FOV
+    -- Visual
     if camera then
         camera.FieldOfView = fovLevel
     end
 
-    -- Chams
     if chamsEnabled then
         for i,v in next, Players:GetPlayers() do
             if v ~= player and v.Character then
@@ -1162,7 +1244,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Wireframe
     if wireframeEnabled then
         for i,v in next, Players:GetPlayers() do
             if v ~= player and v.Character then
