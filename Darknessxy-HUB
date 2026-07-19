@@ -1,63 +1,63 @@
-local API_URL = string.char(104, 116, 116, 112, 115, 58, 47, 47, 115, 99, 114, 105, 112, 116, 46, 103, 111, 111, 103, 108, 101, 46, 99, 111, 109, 47, 109, 97, 99, 114, 111, 115, 47, 115, 47, 65, 75, 102, 121, 99, 98, 121, 90, 109, 105, 56, 55, 102, 117, 122, 56, 67, 83, 52, 50, 48, 49, 84, 76, 86, 89, 73, 98, 45, 57, 83, 56, 72, 108, 50, 89, 70, 66, 119, 95, 70, 55, 115, 116, 95, 77, 51, 69, 75, 78, 69, 122, 77, 80, 107, 122, 51, 119, 45, 84, 48, 102, 51, 71, 121, 88, 121, 56, 95, 120, 55, 56, 47, 101, 120, 101, 99)
+local API_URL = "https://script.google.com/macros/s/AKfycbyZmi87fuz8CS4201TLVYIb-9S8Hl2YFBw_F7st_M3EKNEzMPkz3w-T0f3GyXy8_x78/exec"
 local function getHWID()
 local success, result = pcall(function()
 if syn and syn.crypt and syn.crypt.custom and syn.crypt.custom.hash then
-return syn.crypt.custom.hash(string.char(68, 65, 82, 75, 95, 80, 82, 69, 77, 73, 85, 77, 95, 72, 87, 73, 68, 95, 83, 65, 76, 84))
+return syn.crypt.custom.hash("DARK_PREMIUM_HWID_SALT")
 end
 end)
 if success and result then return result end
 success, result = pcall(function()
 if getgenv().request or request then
 local http = getgenv().request or request
-return game:GetService(string.char(82, 98, 120, 65, 110, 97, 108, 121, 116, 105, 99, 115, 83, 101, 114, 118, 105, 99, 101)):GetClientId()
+return game:GetService("RbxAnalyticsService"):GetClientId()
 end
 end)
 if success and result then return result end
-return game:GetService(string.char(82, 98, 120, 65, 110, 97, 108, 121, 116, 105, 99, 115, 83, 101, 114, 118, 105, 99, 101)):GetClientId() .. string.char(45) .. game.PlaceId
+return game:GetService("RbxAnalyticsService"):GetClientId() .. "-" .. game.PlaceId
 end
 local function validarKeyNoServidor(key, hwid)
-local url = API_URL .. string.char(63, 97, 99, 116, 105, 111, 110, 61, 118, 97, 108, 105, 100, 97, 114, 38, 107, 101, 121, 61) .. tostring(key)
+local url = API_URL .. "?action=validar&key=" .. tostring(key)
 if hwid and hwid ~= "" then
-url = url .. string.char(38, 104, 119, 105, 100, 61) .. tostring(hwid)
+url = url .. "&hwid=" .. tostring(hwid)
 end
 local success, response = pcall(function()
-return syn.request({Url = url, Method = string.char(71, 69, 84)})
+return syn.request({Url = url, Method = "GET"})
 end)
 if not success then
 success, response = pcall(function()
-return (getgenv().request or request)({Url = url, Method = string.char(71, 69, 84)})
+return (getgenv().request or request)({Url = url, Method = "GET"})
 end)
 end
 if not success then
-return false, string.char(69, 114, 114, 111, 32, 97, 111, 32, 99, 111, 110, 101, 99, 116, 97, 114, 32, 99, 111, 109, 32, 111, 32, 115, 101, 114, 118, 105, 100, 111, 114)
+return false, "Erro ao conectar com o servidor"
 end
 local success2, data = pcall(function()
-return game:GetService(string.char(72, 116, 116, 112, 83, 101, 114, 118, 105, 99, 101)):JSONDecode(response.Body)
+return game:GetService("HttpService"):JSONDecode(response.Body)
 end)
 if not success2 then
-return false, string.char(69, 114, 114, 111, 32, 97, 111, 32, 112, 114, 111, 99, 101, 115, 115, 97, 114, 32, 114, 101, 115, 112, 111, 115, 116, 97)
+return false, "Erro ao processar resposta"
 end
 return data.valida, data.motivo
 end
-local Players = game:GetService(string.char(80, 108, 97, 121, 101, 114, 115))
-local UserInputService = game:GetService(string.char(85, 115, 101, 114, 73, 110, 112, 117, 116, 83, 101, 114, 118, 105, 99, 101))
-local RunService = game:GetService(string.char(82, 117, 110, 83, 101, 114, 118, 105, 99, 101))
-local CoreGui = game:GetService(string.char(67, 111, 114, 101, 71, 117, 105))
-local Debris = game:GetService(string.char(68, 101, 98, 114, 105, 115))
-local StarterGui = game:GetService(string.char(83, 116, 97, 114, 116, 101, 114, 71, 117, 105))
-local VirtualInputManager = game:GetService(string.char(86, 105, 114, 116, 117, 97, 108, 73, 110, 112, 117, 116, 77, 97, 110, 97, 103, 101, 114))
-local TweenService = game:GetService(string.char(84, 119, 101, 101, 110, 83, 101, 114, 118, 105, 99, 101))
-local Lighting = game:GetService(string.char(76, 105, 103, 104, 116, 105, 110, 103))
-local Workspace = game:GetService(string.char(87, 111, 114, 107, 115, 112, 97, 99, 101))
-local HttpService = game:GetService(string.char(72, 116, 116, 112, 83, 101, 114, 118, 105, 99, 101))
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local Debris = game:GetService("Debris")
+local StarterGui = game:GetService("StarterGui")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
 local guiParent = (gethui and gethui()) or CoreGui
-if guiParent:FindFirstChild(string.char(68, 65, 82, 75, 72, 85, 66)) then
+if guiParent:FindFirstChild("DARKHUB") then
 guiParent.DARKHUB:Destroy()
 end
-local ScreenGui = Instance.new(string.char(83, 99, 114, 101, 101, 110, 71, 117, 105))
-ScreenGui.Name = string.char(68, 65, 82, 75, 72, 85, 66)
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DARKHUB"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = guiParent
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -100,58 +100,58 @@ local autoClickInterval = 0.1
 local fastAttackActive = false
 local fastAttackInterval = 0.15
 local pingDisplay = 0
-local Background = Instance.new(string.char(70, 114, 97, 109, 101))
+local Background = Instance.new("Frame")
 Background.Size = UDim2.new(1, 0, 1, 0)
 Background.BackgroundColor3 = Color3.fromRGB(8, 0, 0)
 Background.BackgroundTransparency = 0.4
 Background.Parent = ScreenGui
-local gradient = Instance.new(string.char(73, 109, 97, 103, 101, 76, 97, 98, 101, 108))
+local gradient = Instance.new("ImageLabel")
 gradient.Size = UDim2.new(1, 0, 1, 0)
 gradient.BackgroundTransparency = 1
-gradient.Image = string.char(114, 98, 120, 97, 115, 115, 101, 116, 105, 100, 58, 47, 47, 49, 52, 54, 49, 54, 57, 50, 52, 56, 55)
+gradient.Image = "rbxassetid://1461692487"
 gradient.ImageColor3 = Color3.fromRGB(50, 0, 0)
 gradient.ImageTransparency = 0.5
 gradient.Parent = Background
-local FaceFrame = Instance.new(string.char(70, 114, 97, 109, 101))
+local FaceFrame = Instance.new("Frame")
 FaceFrame.Size = UDim2.new(0, 120, 0, 120)
 FaceFrame.Position = UDim2.new(0.5, -60, 0.5, -60)
 FaceFrame.BackgroundTransparency = 1
 FaceFrame.Parent = Background
-local EyeL = Instance.new(string.char(70, 114, 97, 109, 101))
+local EyeL = Instance.new("Frame")
 EyeL.Size = UDim2.new(0, 18, 0, 18)
 EyeL.Position = UDim2.new(0.25, -9, 0.3, -9)
 EyeL.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 EyeL.BorderSizePixel = 0
 EyeL.Parent = FaceFrame
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), EyeL).CornerRadius = UDim.new(1, 0)
-local EyeR = Instance.new(string.char(70, 114, 97, 109, 101))
+Instance.new("UICorner", EyeL).CornerRadius = UDim.new(1, 0)
+local EyeR = Instance.new("Frame")
 EyeR.Size = UDim2.new(0, 18, 0, 18)
 EyeR.Position = UDim2.new(0.75, -9, 0.3, -9)
 EyeR.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 EyeR.BorderSizePixel = 0
 EyeR.Parent = FaceFrame
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), EyeR).CornerRadius = UDim.new(1, 0)
-local PupilL = Instance.new(string.char(70, 114, 97, 109, 101))
+Instance.new("UICorner", EyeR).CornerRadius = UDim.new(1, 0)
+local PupilL = Instance.new("Frame")
 PupilL.Size = UDim2.new(0, 8, 0, 8)
 PupilL.Position = UDim2.new(0.3, -4, 0.35, -4)
 PupilL.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 PupilL.BorderSizePixel = 0
 PupilL.Parent = EyeL
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), PupilL).CornerRadius = UDim.new(1, 0)
-local PupilR = Instance.new(string.char(70, 114, 97, 109, 101))
+Instance.new("UICorner", PupilL).CornerRadius = UDim.new(1, 0)
+local PupilR = Instance.new("Frame")
 PupilR.Size = UDim2.new(0, 8, 0, 8)
 PupilR.Position = UDim2.new(0.3, -4, 0.35, -4)
 PupilR.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 PupilR.BorderSizePixel = 0
 PupilR.Parent = EyeR
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), PupilR).CornerRadius = UDim.new(1, 0)
-local Mouth = Instance.new(string.char(70, 114, 97, 109, 101))
+Instance.new("UICorner", PupilR).CornerRadius = UDim.new(1, 0)
+local Mouth = Instance.new("Frame")
 Mouth.Size = UDim2.new(0, 50, 0, 25)
 Mouth.Position = UDim2.new(0.5, -25, 0.65, 0)
 Mouth.BackgroundColor3 = Color3.fromRGB(180, 180, 180)
 Mouth.BorderSizePixel = 0
 Mouth.Parent = FaceFrame
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), Mouth).CornerRadius = UDim.new(0, 20)
+Instance.new("UICorner", Mouth).CornerRadius = UDim.new(0, 20)
 task.spawn(function()
 while Background and Background.Parent do
 TweenService:Create(EyeL, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Size = UDim2.new(0, 18, 0, 2)}):Play()
@@ -166,18 +166,18 @@ TweenService:Create(Mouth, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Size = UD
 task.wait(2.5)
 end
 end)
-local Particles = Instance.new(string.char(70, 111, 108, 100, 101, 114))
-Particles.Name = string.char(80, 97, 114, 116, 105, 99, 108, 101, 115)
+local Particles = Instance.new("Folder")
+Particles.Name = "Particles"
 Particles.Parent = Background
 for i = 1, 25 do
-local star = Instance.new(string.char(70, 114, 97, 109, 101))
+local star = Instance.new("Frame")
 star.Size = UDim2.new(0, math.random(4, 10), 0, math.random(4, 10))
 star.Position = UDim2.new(math.random() * 0.95, 0, math.random() * 0.95, 0)
 star.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
 star.BackgroundTransparency = 0.2 + math.random() * 0.6
 star.BorderSizePixel = 0
 star.Parent = Particles
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), star).CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", star).CornerRadius = UDim.new(1, 0)
 task.spawn(function()
 local startX = star.Position.X.Scale
 local startY = star.Position.Y.Scale
@@ -197,7 +197,7 @@ end
 local function createStaticBorder(frame, thickness, color)
 thickness = thickness or 2
 color = color or Color3.fromRGB(150, 150, 150)
-local stroke = Instance.new(string.char(85, 73, 83, 116, 114, 111, 107, 101))
+local stroke = Instance.new("UIStroke")
 stroke.Thickness = thickness
 stroke.Color = color
 stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
@@ -217,7 +217,7 @@ BackgroundTransparency = 0.15
 tween:Play()
 return tween
 end
-local KeyFrame = Instance.new(string.char(70, 114, 97, 109, 101))
+local KeyFrame = Instance.new("Frame")
 KeyFrame.Size = UDim2.new(0, 0, 0, 0)
 KeyFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 KeyFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -226,50 +226,50 @@ KeyFrame.BorderSizePixel = 0
 KeyFrame.Active = true
 KeyFrame.Draggable = true
 KeyFrame.Parent = ScreenGui
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), KeyFrame).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", KeyFrame).CornerRadius = UDim.new(0, 12)
 createStaticBorder(KeyFrame, 2, Color3.fromRGB(150, 150, 150))
 animateIn(KeyFrame, 0.5)
-local KeyTitle = Instance.new(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+local KeyTitle = Instance.new("TextLabel")
 KeyTitle.Size = UDim2.new(1, 0, 0, 40)
 KeyTitle.Position = UDim2.new(0, 0, 0, 20)
 KeyTitle.BackgroundTransparency = 1
-KeyTitle.Text = string.char(9889, 32, 68, 65, 82, 75, 32, 80, 82, 69, 77, 73, 85, 77, 32, 9889)
+KeyTitle.Text = "⚡ DARK PREMIUM ⚡"
 KeyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 KeyTitle.Font = Enum.Font.GothamBlack
 KeyTitle.TextSize = 24
 KeyTitle.Parent = KeyFrame
-local SubTitle = Instance.new(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+local SubTitle = Instance.new("TextLabel")
 SubTitle.Size = UDim2.new(1, 0, 0, 25)
 SubTitle.Position = UDim2.new(0, 0, 0, 60)
 SubTitle.BackgroundTransparency = 1
-SubTitle.Text = string.char(55357, 56594, 32, 75, 69, 89, 32, 68, 79, 32, 68, 65, 82, 75, 78, 69, 69, 83, 88, 89, 32, 72, 85, 66)
+SubTitle.Text = "🔒 KEY DO DARKNEESXY HUB"
 SubTitle.TextColor3 = Color3.fromRGB(200, 200, 200)
 SubTitle.Font = Enum.Font.GothamMedium
 SubTitle.TextSize = 16
 SubTitle.Parent = KeyFrame
-local KeyInput = Instance.new(string.char(84, 101, 120, 116, 66, 111, 120))
+local KeyInput = Instance.new("TextBox")
 KeyInput.Size = UDim2.new(0.8, 0, 0, 35)
 KeyInput.Position = UDim2.new(0.1, 0, 0, 95)
 KeyInput.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 KeyInput.Text = ""
-KeyInput.PlaceholderText = string.char(68, 105, 103, 105, 116, 101, 32, 97, 32, 75, 101, 121, 32, 97, 113, 117, 105, 46, 46, 46)
+KeyInput.PlaceholderText = "Digite a Key aqui..."
 KeyInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
 KeyInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 KeyInput.Font = Enum.Font.GothamMedium
 KeyInput.TextSize = 16
 KeyInput.Parent = KeyFrame
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), KeyInput).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", KeyInput).CornerRadius = UDim.new(0, 6)
 createStaticBorder(KeyInput, 2, Color3.fromRGB(150, 150, 150))
-local LoginBtn = Instance.new(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+local LoginBtn = Instance.new("TextButton")
 LoginBtn.Size = UDim2.new(0.8, 0, 0, 35)
 LoginBtn.Position = UDim2.new(0.1, 0, 0, 140)
 LoginBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-LoginBtn.Text = string.char(55357, 56595, 32, 65, 67, 69, 83, 83, 65, 82)
+LoginBtn.Text = "🔓 ACESSAR"
 LoginBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 LoginBtn.Font = Enum.Font.GothamBold
 LoginBtn.TextSize = 16
 LoginBtn.Parent = KeyFrame
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), LoginBtn).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", LoginBtn).CornerRadius = UDim.new(0, 6)
 createStaticBorder(LoginBtn, 2, Color3.fromRGB(150, 150, 150))
 LoginBtn.MouseEnter:Connect(function()
 TweenService:Create(LoginBtn, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
@@ -283,16 +283,16 @@ BackgroundColor3 = Color3.fromRGB(60, 60, 60),
 TextColor3 = Color3.fromRGB(255, 255, 255)
 }):Play()
 end)
-local StatusText = Instance.new(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+local StatusText = Instance.new("TextLabel")
 StatusText.Size = UDim2.new(1, 0, 0, 20)
 StatusText.Position = UDim2.new(0, 0, 0, 180)
 StatusText.BackgroundTransparency = 1
-StatusText.Text = string.char(55357, 56593, 32, 65, 103, 117, 97, 114, 100, 97, 110, 100, 111, 32, 99, 104, 97, 118, 101, 46, 46, 46)
+StatusText.Text = "🔑 Aguardando chave..."
 StatusText.TextColor3 = Color3.fromRGB(200, 200, 200)
 StatusText.Font = Enum.Font.Gotham
 StatusText.TextSize = 12
 StatusText.Parent = KeyFrame
-local MainFrame = Instance.new(string.char(70, 114, 97, 109, 101))
+local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 0, 0, 0)
 MainFrame.Position = UDim2.new(0.02, 0, 0.05, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(10, 0, 0)
@@ -302,13 +302,13 @@ MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Visible = false
 MainFrame.Parent = ScreenGui
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), MainFrame).CornerRadius = UDim.new(0, 10)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 createStaticBorder(MainFrame, 3, Color3.fromRGB(150, 150, 150))
-local TitleTop = Instance.new(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+local TitleTop = Instance.new("TextLabel")
 TitleTop.Size = UDim2.new(1, 0, 0, 40)
 TitleTop.Position = UDim2.new(0, 0, 0, 10)
 TitleTop.BackgroundTransparency = 1
-TitleTop.Text = string.char(9889, 32, 68, 65, 82, 75, 78, 69, 83, 83, 88, 89, 32, 72, 85, 66, 32, 9889)
+TitleTop.Text = "⚡ DARKNESSXY HUB ⚡"
 TitleTop.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleTop.Font = Enum.Font.GothamBlack
 TitleTop.TextSize = 30
@@ -319,25 +319,25 @@ TweenService:Create(TitleTop, TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.Eas
 wait(0.8)
 end
 end)
-local SubTitleMain = Instance.new(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+local SubTitleMain = Instance.new("TextLabel")
 SubTitleMain.Size = UDim2.new(1, 0, 0, 20)
 SubTitleMain.Position = UDim2.new(0, 0, 0, 50)
 SubTitleMain.BackgroundTransparency = 1
-SubTitleMain.Text = string.char(9889, 32, 80, 82, 69, 77, 73, 85, 77, 32, 70, 79, 82, 32, 80, 76, 65, 89, 69, 82, 83, 32, 9889)
+SubTitleMain.Text = "⚡ PREMIUM FOR PLAYERS ⚡"
 SubTitleMain.TextColor3 = Color3.fromRGB(200, 200, 200)
 SubTitleMain.Font = Enum.Font.GothamBold
 SubTitleMain.TextSize = 14
 SubTitleMain.Parent = MainFrame
-local CloseBtn = Instance.new(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 30, 0, 30)
 CloseBtn.Position = UDim2.new(1, -35, 0, 8)
 CloseBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-CloseBtn.Text = string.char(10005)
+CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.TextSize = 18
 CloseBtn.Parent = MainFrame
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), CloseBtn).CornerRadius = UDim.new(0, 8)
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
 createStaticBorder(CloseBtn, 2, Color3.fromRGB(150, 150, 150))
 CloseBtn.MouseEnter:Connect(function()
 TweenService:Create(CloseBtn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80, 80, 80)}):Play()
@@ -360,13 +360,13 @@ BackgroundTransparency = 0.1
 tween:Play()
 return tween
 end
-local TabBar = Instance.new(string.char(70, 114, 97, 109, 101))
+local TabBar = Instance.new("Frame")
 TabBar.Size = UDim2.new(0.95, 0, 0, 45)
 TabBar.Position = UDim2.new(0.025, 0, 0, 75)
 TabBar.BackgroundTransparency = 1
 TabBar.Parent = MainFrame
 local function createTabButton(text, xPos)
-local Btn = Instance.new(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+local Btn = Instance.new("TextButton")
 Btn.Size = UDim2.new(0.12, 0, 1, 0)
 Btn.Position = UDim2.new(xPos, 0, 0, 0)
 Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -375,7 +375,7 @@ Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
 Btn.Font = Enum.Font.GothamBold
 Btn.TextSize = 9
 Btn.Parent = TabBar
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), Btn).CornerRadius = UDim.new(0, 5)
+Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 5)
 createStaticBorder(Btn, 1.5, Color3.fromRGB(150, 150, 150))
 Btn.MouseEnter:Connect(function()
 TweenService:Create(Btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -385,23 +385,23 @@ TweenService:Create(Btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB
 end)
 return Btn
 end
-local TabGlitchBtn = createTabButton(string.char(71, 76, 73, 84, 67, 72), 0)
-local TabEspBtn = createTabButton(string.char(69, 83, 80), 0.125)
-local TabHitboxBtn = createTabButton(string.char(72, 73, 84, 66, 79, 88), 0.25)
-local TabFlyBtn = createTabButton(string.char(70, 76, 89), 0.375)
-local TabAimbotBtn = createTabButton(string.char(65, 73, 77, 66, 79, 84), 0.5)
-local TabUtilsBtn = createTabButton(string.char(85, 84, 73, 76, 83), 0.625)
-local TabOptBtn = createTabButton(string.char(79, 84, 73, 77, 73, 90), 0.75)
-local TabVisualBtn = createTabButton(string.char(86, 73, 83, 85, 65, 76), 0.875)
-local Pages = Instance.new(string.char(70, 114, 97, 109, 101))
+local TabGlitchBtn = createTabButton("GLITCH", 0)
+local TabEspBtn = createTabButton("ESP", 0.125)
+local TabHitboxBtn = createTabButton("HITBOX", 0.25)
+local TabFlyBtn = createTabButton("FLY", 0.375)
+local TabAimbotBtn = createTabButton("AIMBOT", 0.5)
+local TabUtilsBtn = createTabButton("UTILS", 0.625)
+local TabOptBtn = createTabButton("OTIMIZ", 0.75)
+local TabVisualBtn = createTabButton("VISUAL", 0.875)
+local Pages = Instance.new("Frame")
 Pages.Size = UDim2.new(1, 0, 0, 600)
 Pages.Position = UDim2.new(0, 0, 0, 130)
 Pages.BackgroundTransparency = 1
 Pages.Parent = MainFrame
-local pageNames = {string.char(71, 108, 105, 116, 99, 104, 80, 97, 103, 101), string.char(69, 115, 112, 80, 97, 103, 101), string.char(70, 108, 121, 80, 97, 103, 101), string.char(72, 105, 116, 98, 111, 120, 80, 97, 103, 101), string.char(65, 105, 109, 98, 111, 116, 80, 97, 103, 101), string.char(85, 116, 105, 108, 115, 80, 97, 103, 101), string.char(79, 112, 116, 105, 109, 105, 122, 97, 116, 105, 111, 110, 80, 97, 103, 101), string.char(86, 105, 115, 117, 97, 108, 80, 97, 103, 101)}
+local pageNames = {"GlitchPage", "EspPage", "FlyPage", "HitboxPage", "AimbotPage", "UtilsPage", "OptimizationPage", "VisualPage"}
 local pages = {}
 for _, name in ipairs(pageNames) do
-local page = Instance.new(string.char(70, 114, 97, 109, 101))
+local page = Instance.new("Frame")
 page.Size = UDim2.new(1, 0, 1, 0)
 page.BackgroundTransparency = 1
 page.Parent = Pages
@@ -430,7 +430,7 @@ TabUtilsBtn.MouseButton1Click:Connect(function() showPage(pages.UtilsPage) end)
 TabOptBtn.MouseButton1Click:Connect(function() showPage(pages.OptimizationPage) end)
 TabVisualBtn.MouseButton1Click:Connect(function() showPage(pages.VisualPage) end)
 local function createInputField(labelText, defaultVal, yPos, parentPage)
-local Label = Instance.new(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+local Label = Instance.new("TextLabel")
 Label.Size = UDim2.new(0.5, 0, 0, 35)
 Label.Position = UDim2.new(0, 20, 0, yPos)
 Label.BackgroundTransparency = 1
@@ -440,15 +440,15 @@ Label.TextXAlignment = Enum.TextXAlignment.Left
 Label.Font = Enum.Font.GothamMedium
 Label.TextSize = 14
 Label.Parent = parentPage
-local InputBg = Instance.new(string.char(70, 114, 97, 109, 101))
+local InputBg = Instance.new("Frame")
 InputBg.Size = UDim2.new(0.42, 0, 0, 32)
 InputBg.Position = UDim2.new(0.53, -5, 0, yPos)
 InputBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 InputBg.BorderSizePixel = 0
 InputBg.Parent = parentPage
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), InputBg).CornerRadius = UDim.new(0, 4)
+Instance.new("UICorner", InputBg).CornerRadius = UDim.new(0, 4)
 createStaticBorder(InputBg, 1.5, Color3.fromRGB(150, 150, 150))
-local Input = Instance.new(string.char(84, 101, 120, 116, 66, 111, 120))
+local Input = Instance.new("TextBox")
 Input.Size = UDim2.new(1, 0, 1, 0)
 Input.BackgroundTransparency = 1
 Input.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -459,7 +459,7 @@ Input.Parent = InputBg
 return Input
 end
 local function createToggleButton(text, yPos, parentPage)
-local Btn = Instance.new(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+local Btn = Instance.new("TextButton")
 Btn.Size = UDim2.new(0.9, 0, 0, 35)
 Btn.Position = UDim2.new(0.05, 0, 0, yPos)
 Btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
@@ -468,7 +468,7 @@ Btn.TextColor3 = Color3.fromRGB(200, 200, 200)
 Btn.Font = Enum.Font.GothamBold
 Btn.TextSize = 13
 Btn.Parent = parentPage
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), Btn).CornerRadius = UDim.new(0, 5)
+Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 5)
 createStaticBorder(Btn, 2, Color3.fromRGB(150, 150, 150))
 Btn.MouseEnter:Connect(function()
 TweenService:Create(Btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -478,55 +478,55 @@ TweenService:Create(Btn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB
 end)
 return Btn
 end
-local EspToggleBtn = createToggleButton(string.char(55357, 57057, 65039, 32, 69, 83, 80, 32, 40, 66, 41, 58, 32, 79, 78), 5, pages.EspPage)
+local EspToggleBtn = createToggleButton("🛡️ ESP (B): ON", 5, pages.EspPage)
 local function updateEspVisual()
-EspToggleBtn.Text = espEnabled and string.char(55357, 57057, 65039, 32, 69, 83, 80, 32, 40, 66, 41, 58, 32, 79, 78) or string.char(55357, 57057, 65039, 32, 69, 83, 80, 32, 40, 66, 41, 58, 32, 79, 70, 70)
+EspToggleBtn.Text = espEnabled and "🛡️ ESP (B): ON" or "🛡️ ESP (B): OFF"
 EspToggleBtn.BackgroundColor3 = espEnabled and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
 end
 EspToggleBtn.MouseButton1Click:Connect(function()
 espEnabled = not espEnabled
 updateEspVisual()
 end)
-local GlitchToggleBtn = createToggleButton(string.char(9889, 32, 71, 76, 73, 84, 67, 72, 58, 32, 79, 70, 70), 5, pages.GlitchPage)
-local GlitchSpeedInput = createInputField(string.char(86, 101, 108, 111, 99, 105, 100, 97, 100, 101, 58), getgenv().GlideSpeed, 55, pages.GlitchPage)
-local GlitchDurInput = createInputField(string.char(68, 117, 114, 97, 231, 227, 111, 58), getgenv().GlideTime, 95, pages.GlitchPage)
-local JumpPowerInput = createInputField(string.char(71, 45, 74, 117, 109, 112, 32, 80, 111, 119, 101, 114, 58), JumpForce, 135, pages.GlitchPage)
+local GlitchToggleBtn = createToggleButton("⚡ GLITCH: OFF", 5, pages.GlitchPage)
+local GlitchSpeedInput = createInputField("Velocidade:", getgenv().GlideSpeed, 55, pages.GlitchPage)
+local GlitchDurInput = createInputField("Duração:", getgenv().GlideTime, 95, pages.GlitchPage)
+local JumpPowerInput = createInputField("G-Jump Power:", JumpForce, 135, pages.GlitchPage)
 local function updateGlitchVisual()
-GlitchToggleBtn.Text = getgenv().GlideEnabled and string.char(9889, 32, 71, 76, 73, 84, 67, 72, 58, 32, 79, 78) or string.char(9889, 32, 71, 76, 73, 84, 67, 72, 58, 32, 79, 70, 70)
+GlitchToggleBtn.Text = getgenv().GlideEnabled and "⚡ GLITCH: ON" or "⚡ GLITCH: OFF"
 GlitchToggleBtn.BackgroundColor3 = getgenv().GlideEnabled and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
 end
 GlitchToggleBtn.MouseButton1Click:Connect(function()
 getgenv().GlideEnabled = not getgenv().GlideEnabled
 updateGlitchVisual()
 end)
-local FlyToggleBtn = createToggleButton(string.char(55358, 56961, 32, 70, 76, 89, 32, 40, 72, 41, 58, 32, 79, 70, 70), 5, pages.FlyPage)
-local FlySpeedInput = createInputField(string.char(70, 108, 121, 32, 83, 112, 101, 101, 100, 58), flySpeed, 55, pages.FlyPage)
+local FlyToggleBtn = createToggleButton("🪁 FLY (H): OFF", 5, pages.FlyPage)
+local FlySpeedInput = createInputField("Fly Speed:", flySpeed, 55, pages.FlyPage)
 local function updateFlyState(state)
 flyActive = state
-FlyToggleBtn.Text = flyActive and string.char(55358, 56961, 32, 70, 76, 89, 32, 40, 72, 41, 58, 32, 79, 78) or string.char(55358, 56961, 32, 70, 76, 89, 32, 40, 72, 41, 58, 32, 79, 70, 70)
+FlyToggleBtn.Text = flyActive and "🪁 FLY (H): ON" or "🪁 FLY (H): OFF"
 FlyToggleBtn.BackgroundColor3 = flyActive and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
 if not flyActive then
 if FlyVel then FlyVel:Destroy() FlyVel = nil end
-if player.Character and player.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+if player.Character and player.Character:FindFirstChild("Humanoid") then
 player.Character.Humanoid.PlatformStand = false
 end
-elseif player.Character and player.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+elseif player.Character and player.Character:FindFirstChild("Humanoid") then
 player.Character.Humanoid.PlatformStand = true
 end
 end
 FlyToggleBtn.MouseButton1Click:Connect(function()
 updateFlyState(not flyActive)
 end)
-local HitboxToggleBtn = createToggleButton(string.char(55356, 57263, 32, 72, 73, 84, 66, 79, 88, 58, 32, 79, 70, 70), 5, pages.HitboxPage)
-local HitboxSizeInput = createInputField(string.char(84, 97, 109, 97, 110, 104, 111, 58), getgenv().HitboxSize, 55, pages.HitboxPage)
-local HitboxTransInput = createInputField(string.char(84, 114, 97, 110, 115, 112, 97, 114, 234, 110, 99, 105, 97, 58), getgenv().HitboxTransparency, 95, pages.HitboxPage)
-local TeamCheckBtn = createToggleButton(string.char(55357, 56421, 32, 84, 69, 65, 77, 32, 67, 72, 69, 67, 75, 58, 32, 79, 70, 70), 145, pages.HitboxPage)
+local HitboxToggleBtn = createToggleButton("🎯 HITBOX: OFF", 5, pages.HitboxPage)
+local HitboxSizeInput = createInputField("Tamanho:", getgenv().HitboxSize, 55, pages.HitboxPage)
+local HitboxTransInput = createInputField("Transparência:", getgenv().HitboxTransparency, 95, pages.HitboxPage)
+local TeamCheckBtn = createToggleButton("👥 TEAM CHECK: OFF", 145, pages.HitboxPage)
 local function updateHitboxVisual()
-HitboxToggleBtn.Text = getgenv().HitboxStatus and string.char(55356, 57263, 32, 72, 73, 84, 66, 79, 88, 58, 32, 79, 78) or string.char(55356, 57263, 32, 72, 73, 84, 66, 79, 88, 58, 32, 79, 70, 70)
+HitboxToggleBtn.Text = getgenv().HitboxStatus and "🎯 HITBOX: ON" or "🎯 HITBOX: OFF"
 HitboxToggleBtn.BackgroundColor3 = getgenv().HitboxStatus and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
 end
 local function updateTeamCheckVisual()
-TeamCheckBtn.Text = getgenv().TeamCheck and string.char(55357, 56421, 32, 84, 69, 65, 77, 32, 67, 72, 69, 67, 75, 58, 32, 79, 78) or string.char(55357, 56421, 32, 84, 69, 65, 77, 32, 67, 72, 69, 67, 75, 58, 32, 79, 70, 70)
+TeamCheckBtn.Text = getgenv().TeamCheck and "👥 TEAM CHECK: ON" or "👥 TEAM CHECK: OFF"
 TeamCheckBtn.BackgroundColor3 = getgenv().TeamCheck and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
 end
 HitboxToggleBtn.MouseButton1Click:Connect(function()
@@ -538,30 +538,30 @@ getgenv().TeamCheck = not getgenv().TeamCheck
 updateTeamCheckVisual()
 end)
 local AimbotPage = pages.AimbotPage
-local AimbotToggleBtn = createToggleButton(string.char(55357, 56619, 32, 65, 105, 109, 98, 111, 116, 58, 32, 79, 70, 70), 5, AimbotPage)
+local AimbotToggleBtn = createToggleButton("🔫 Aimbot: OFF", 5, AimbotPage)
 local function updateAimbotToggleVisual()
-AimbotToggleBtn.Text = aimbotActive and string.char(55357, 56619, 32, 65, 105, 109, 98, 111, 116, 58, 32, 79, 78) or string.char(55357, 56619, 32, 65, 105, 109, 98, 111, 116, 58, 32, 79, 70, 70)
+AimbotToggleBtn.Text = aimbotActive and "🔫 Aimbot: ON" or "🔫 Aimbot: OFF"
 AimbotToggleBtn.BackgroundColor3 = aimbotActive and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
 end
 AimbotToggleBtn.MouseButton1Click:Connect(function()
 aimbotActive = not aimbotActive
 updateAimbotToggleVisual()
 end)
-local PlayerListFrame = Instance.new(string.char(70, 114, 97, 109, 101))
+local PlayerListFrame = Instance.new("Frame")
 PlayerListFrame.Size = UDim2.new(0.9, 0, 0, 400)
 PlayerListFrame.Position = UDim2.new(0.05, 0, 0, 55)
 PlayerListFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 PlayerListFrame.BackgroundTransparency = 0.2
 PlayerListFrame.Parent = AimbotPage
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), PlayerListFrame).CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", PlayerListFrame).CornerRadius = UDim.new(0, 6)
 createStaticBorder(PlayerListFrame, 2, Color3.fromRGB(150, 150, 150))
-local ScrollingFrame = Instance.new(string.char(83, 99, 114, 111, 108, 108, 105, 110, 103, 70, 114, 97, 109, 101))
+local ScrollingFrame = Instance.new("ScrollingFrame")
 ScrollingFrame.Size = UDim2.new(1, 0, 1, 0)
 ScrollingFrame.BackgroundTransparency = 1
 ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 ScrollingFrame.ScrollBarThickness = 6
 ScrollingFrame.Parent = PlayerListFrame
-local PlayerListLayout = Instance.new(string.char(85, 73, 76, 105, 115, 116, 76, 97, 121, 111, 117, 116))
+local PlayerListLayout = Instance.new("UIListLayout")
 PlayerListLayout.Padding = UDim.new(0, 4)
 PlayerListLayout.SortOrder = Enum.SortOrder.Name
 PlayerListLayout.Parent = ScrollingFrame
@@ -576,7 +576,7 @@ selectedPlayerButton = nil
 local yOffset = 0
 for _, plr in ipairs(Players:GetPlayers()) do
 if plr ~= player then
-local btn = Instance.new(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(1, 0, 0, 30)
 btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 btn.Text = plr.Name
@@ -584,7 +584,7 @@ btn.TextColor3 = Color3.fromRGB(200, 200, 200)
 btn.Font = Enum.Font.GothamBold
 btn.TextSize = 14
 btn.Parent = ScrollingFrame
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), btn).CornerRadius = UDim.new(0, 4)
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
 createStaticBorder(btn, 1, Color3.fromRGB(150, 150, 150))
 btn.MouseButton1Click:Connect(function()
 aimbotTarget = plr
@@ -593,9 +593,9 @@ selectedPlayerButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 end
 btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 selectedPlayerButton = btn
-StarterGui:SetCore(string.char(83, 101, 110, 100, 78, 111, 116, 105, 102, 105, 99, 97, 116, 105, 111, 110), {
-Title = string.char(55356, 57263, 32, 65, 108, 118, 111, 32, 115, 101, 108, 101, 99, 105, 111, 110, 97, 100, 111),
-Text = string.char(77, 105, 114, 97, 110, 100, 111, 32, 101, 109, 32) .. plr.Name,
+StarterGui:SetCore("SendNotification", {
+Title = "🎯 Alvo selecionado",
+Text = "Mirando em " .. plr.Name,
 Duration = 2
 })
 end)
@@ -608,16 +608,16 @@ end
 Players.PlayerAdded:Connect(updateAimbotList)
 Players.PlayerRemoving:Connect(updateAimbotList)
 updateAimbotList()
-local ClearTargetBtn = Instance.new(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+local ClearTargetBtn = Instance.new("TextButton")
 ClearTargetBtn.Size = UDim2.new(0.4, 0, 0, 30)
 ClearTargetBtn.Position = UDim2.new(0.05, 0, 0, 465)
 ClearTargetBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-ClearTargetBtn.Text = string.char(10006, 32, 76, 105, 109, 112, 97, 114, 32, 65, 108, 118, 111)
+ClearTargetBtn.Text = "✖ Limpar Alvo"
 ClearTargetBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 ClearTargetBtn.Font = Enum.Font.GothamBold
 ClearTargetBtn.TextSize = 14
 ClearTargetBtn.Parent = AimbotPage
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), ClearTargetBtn).CornerRadius = UDim.new(0, 5)
+Instance.new("UICorner", ClearTargetBtn).CornerRadius = UDim.new(0, 5)
 createStaticBorder(ClearTargetBtn, 2, Color3.fromRGB(150, 150, 150))
 ClearTargetBtn.MouseEnter:Connect(function()
 TweenService:Create(ClearTargetBtn, TweenInfo.new(0.15), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
@@ -631,31 +631,31 @@ if selectedPlayerButton then
 selectedPlayerButton.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 selectedPlayerButton = nil
 end
-StarterGui:SetCore(string.char(83, 101, 110, 100, 78, 111, 116, 105, 102, 105, 99, 97, 116, 105, 111, 110), {
-Title = string.char(55358, 56825, 32, 65, 108, 118, 111, 32, 114, 101, 109, 111, 118, 105, 100, 111),
-Text = string.char(78, 101, 110, 104, 117, 109, 32, 97, 108, 118, 111, 32, 115, 101, 108, 101, 99, 105, 111, 110, 97, 100, 111),
+StarterGui:SetCore("SendNotification", {
+Title = "🧹 Alvo removido",
+Text = "Nenhum alvo selecionado",
 Duration = 2
 })
 end)
-local PingLabel = Instance.new(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+local PingLabel = Instance.new("TextLabel")
 PingLabel.Size = UDim2.new(1, 0, 0, 30)
 PingLabel.Position = UDim2.new(0, 0, 0, 5)
 PingLabel.BackgroundTransparency = 1
-PingLabel.Text = string.char(55357, 56566, 32, 80, 105, 110, 103, 58, 32, 48, 32, 109, 115)
+PingLabel.Text = "📶 Ping: 0 ms"
 PingLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 PingLabel.Font = Enum.Font.GothamBold
 PingLabel.TextSize = 16
 PingLabel.Parent = pages.UtilsPage
-local AutoClickBtn = createToggleButton(string.char(55357, 56753, 65039, 32, 65, 85, 84, 79, 32, 67, 76, 73, 67, 75, 58, 32, 79, 70, 70), 45, pages.UtilsPage)
-local AutoClickIntervalInput = createInputField(string.char(73, 110, 116, 101, 114, 118, 97, 108, 111, 32, 40, 115, 41, 58), autoClickInterval, 95, pages.UtilsPage)
-local FastAttackBtn = createToggleButton(string.char(9889, 32, 70, 65, 83, 84, 32, 65, 84, 84, 65, 67, 75, 58, 32, 79, 70, 70), 150, pages.UtilsPage)
-local FastAttackIntervalInput = createInputField(string.char(73, 110, 116, 101, 114, 118, 97, 108, 111, 32, 40, 115, 41, 58), fastAttackInterval, 200, pages.UtilsPage)
+local AutoClickBtn = createToggleButton("🖱️ AUTO CLICK: OFF", 45, pages.UtilsPage)
+local AutoClickIntervalInput = createInputField("Intervalo (s):", autoClickInterval, 95, pages.UtilsPage)
+local FastAttackBtn = createToggleButton("⚡ FAST ATTACK: OFF", 150, pages.UtilsPage)
+local FastAttackIntervalInput = createInputField("Intervalo (s):", fastAttackInterval, 200, pages.UtilsPage)
 local function updateAutoClickVisual()
-AutoClickBtn.Text = autoClickActive and string.char(55357, 56753, 65039, 32, 65, 85, 84, 79, 32, 67, 76, 73, 67, 75, 58, 32, 79, 78) or string.char(55357, 56753, 65039, 32, 65, 85, 84, 79, 32, 67, 76, 73, 67, 75, 58, 32, 79, 70, 70)
+AutoClickBtn.Text = autoClickActive and "🖱️ AUTO CLICK: ON" or "🖱️ AUTO CLICK: OFF"
 AutoClickBtn.BackgroundColor3 = autoClickActive and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
 end
 local function updateFastAttackVisual()
-FastAttackBtn.Text = fastAttackActive and string.char(9889, 32, 70, 65, 83, 84, 32, 65, 84, 84, 65, 67, 75, 58, 32, 79, 78) or string.char(9889, 32, 70, 65, 83, 84, 32, 65, 84, 84, 65, 67, 75, 58, 32, 79, 70, 70)
+FastAttackBtn.Text = fastAttackActive and "⚡ FAST ATTACK: ON" or "⚡ FAST ATTACK: OFF"
 FastAttackBtn.BackgroundColor3 = fastAttackActive and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
 end
 AutoClickBtn.MouseButton1Click:Connect(function()
@@ -675,22 +675,22 @@ local val = tonumber(FastAttackIntervalInput.Text)
 if val and val > 0 then fastAttackInterval = val end
 end)
 local extraY = 250
-local AntiAFKBtn = createToggleButton(string.char(55357, 57057, 65039, 32, 65, 78, 84, 73, 45, 65, 70, 75, 58, 32, 79, 70, 70), extraY, pages.UtilsPage); extraY = extraY + 50
-local AutoFarmBtn = createToggleButton(string.char(55356, 57150, 32, 65, 85, 84, 79, 45, 70, 65, 82, 77, 58, 32, 79, 70, 70), extraY, pages.UtilsPage); extraY = extraY + 50
-local GodModeBtn = createToggleButton(string.char(55357, 56448, 32, 71, 79, 68, 32, 77, 79, 68, 69, 58, 32, 79, 70, 70), extraY, pages.UtilsPage); extraY = extraY + 50
-local InfiniteJumpBtn = createToggleButton(string.char(55358, 56728, 32, 73, 78, 70, 73, 78, 73, 84, 69, 32, 74, 85, 77, 80, 58, 32, 79, 70, 70), extraY, pages.UtilsPage); extraY = extraY + 50
-local SpeedHackBtn = createToggleButton(string.char(55357, 56488, 32, 83, 80, 69, 69, 68, 32, 72, 65, 67, 75, 58, 32, 79, 70, 70), extraY, pages.UtilsPage); extraY = extraY + 50
-local SpeedHackInput = createInputField(string.char(83, 112, 101, 101, 100, 32, 86, 97, 108, 117, 101, 58), speedHackValue, extraY, pages.UtilsPage); extraY = extraY + 45
+local AntiAFKBtn = createToggleButton("🛡️ ANTI-AFK: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
+local AutoFarmBtn = createToggleButton("🌾 AUTO-FARM: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
+local GodModeBtn = createToggleButton("💀 GOD MODE: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
+local InfiniteJumpBtn = createToggleButton("🦘 INFINITE JUMP: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
+local SpeedHackBtn = createToggleButton("💨 SPEED HACK: OFF", extraY, pages.UtilsPage); extraY = extraY + 50
+local SpeedHackInput = createInputField("Speed Value:", speedHackValue, extraY, pages.UtilsPage); extraY = extraY + 45
 local function updateMiscVisuals()
-AntiAFKBtn.Text = antiAFK and string.char(55357, 57057, 65039, 32, 65, 78, 84, 73, 45, 65, 70, 75, 58, 32, 79, 78) or string.char(55357, 57057, 65039, 32, 65, 78, 84, 73, 45, 65, 70, 75, 58, 32, 79, 70, 70)
+AntiAFKBtn.Text = antiAFK and "🛡️ ANTI-AFK: ON" or "🛡️ ANTI-AFK: OFF"
 AntiAFKBtn.BackgroundColor3 = antiAFK and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
-AutoFarmBtn.Text = autoFarm and string.char(55356, 57150, 32, 65, 85, 84, 79, 45, 70, 65, 82, 77, 58, 32, 79, 78) or string.char(55356, 57150, 32, 65, 85, 84, 79, 45, 70, 65, 82, 77, 58, 32, 79, 70, 70)
+AutoFarmBtn.Text = autoFarm and "🌾 AUTO-FARM: ON" or "🌾 AUTO-FARM: OFF"
 AutoFarmBtn.BackgroundColor3 = autoFarm and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
-GodModeBtn.Text = godMode and string.char(55357, 56448, 32, 71, 79, 68, 32, 77, 79, 68, 69, 58, 32, 79, 78) or string.char(55357, 56448, 32, 71, 79, 68, 32, 77, 79, 68, 69, 58, 32, 79, 70, 70)
+GodModeBtn.Text = godMode and "💀 GOD MODE: ON" or "💀 GOD MODE: OFF"
 GodModeBtn.BackgroundColor3 = godMode and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
-InfiniteJumpBtn.Text = infiniteJump and string.char(55358, 56728, 32, 73, 78, 70, 73, 78, 73, 84, 69, 32, 74, 85, 77, 80, 58, 32, 79, 78) or string.char(55358, 56728, 32, 73, 78, 70, 73, 78, 73, 84, 69, 32, 74, 85, 77, 80, 58, 32, 79, 70, 70)
+InfiniteJumpBtn.Text = infiniteJump and "🦘 INFINITE JUMP: ON" or "🦘 INFINITE JUMP: OFF"
 InfiniteJumpBtn.BackgroundColor3 = infiniteJump and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
-SpeedHackBtn.Text = speedHack and string.char(55357, 56488, 32, 83, 80, 69, 69, 68, 32, 72, 65, 67, 75, 58, 32, 79, 78) or string.char(55357, 56488, 32, 83, 80, 69, 69, 68, 32, 72, 65, 67, 75, 58, 32, 79, 70, 70)
+SpeedHackBtn.Text = speedHack and "💨 SPEED HACK: ON" or "💨 SPEED HACK: OFF"
 SpeedHackBtn.BackgroundColor3 = speedHack and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
 end
 AntiAFKBtn.MouseButton1Click:Connect(function()
@@ -718,25 +718,25 @@ local val = tonumber(SpeedHackInput.Text)
 if val and val > 0 then speedHackValue = val end
 end)
 local optY = 5
-local OptParticlesBtn = createToggleButton(string.char(10052, 65039, 32, 82, 101, 100, 117, 122, 105, 114, 32, 80, 97, 114, 116, 237, 99, 117, 108, 97, 115, 58, 32, 79, 70, 70), optY, pages.OptimizationPage); optY = optY + 50
-local OptFogBtn = createToggleButton(string.char(55356, 57131, 65039, 32, 82, 101, 109, 111, 118, 101, 114, 32, 78, 233, 118, 111, 97, 58, 32, 79, 70, 70), optY, pages.OptimizationPage); optY = optY + 50
-local OptFPSInput = createInputField(string.char(77, 97, 120, 32, 70, 80, 83, 58), maxFPS, optY, pages.OptimizationPage); optY = optY + 45
-local OptDecorBtn = createToggleButton(string.char(55357, 56785, 65039, 32, 82, 101, 109, 111, 118, 101, 114, 32, 68, 101, 99, 111, 114, 97, 231, 245, 101, 115, 58, 32, 79, 70, 70), optY, pages.OptimizationPage); optY = optY + 50
-local OptWaterBtn = createToggleButton(string.char(55357, 56487, 32, 82, 101, 109, 111, 118, 101, 114, 32, 69, 102, 101, 105, 116, 111, 115, 32, 193, 103, 117, 97, 58, 32, 79, 70, 70), optY, pages.OptimizationPage); optY = optY + 50
-local OptShadowsBtn = createToggleButton(string.char(55356, 57105, 32, 68, 101, 115, 97, 116, 105, 118, 97, 114, 32, 83, 111, 109, 98, 114, 97, 115, 58, 32, 79, 70, 70), optY, pages.OptimizationPage); optY = optY + 50
-local OptAnimBtn = createToggleButton(string.char(55356, 57260, 32, 68, 101, 115, 97, 116, 105, 118, 97, 114, 32, 65, 110, 105, 109, 97, 231, 245, 101, 115, 58, 32, 79, 70, 70), optY, pages.OptimizationPage); optY = optY + 50
+local OptParticlesBtn = createToggleButton("❄️ Reduzir Partículas: OFF", optY, pages.OptimizationPage); optY = optY + 50
+local OptFogBtn = createToggleButton("🌫️ Remover Névoa: OFF", optY, pages.OptimizationPage); optY = optY + 50
+local OptFPSInput = createInputField("Max FPS:", maxFPS, optY, pages.OptimizationPage); optY = optY + 45
+local OptDecorBtn = createToggleButton("🗑️ Remover Decorações: OFF", optY, pages.OptimizationPage); optY = optY + 50
+local OptWaterBtn = createToggleButton("💧 Remover Efeitos Água: OFF", optY, pages.OptimizationPage); optY = optY + 50
+local OptShadowsBtn = createToggleButton("🌑 Desativar Sombras: OFF", optY, pages.OptimizationPage); optY = optY + 50
+local OptAnimBtn = createToggleButton("🎬 Desativar Animações: OFF", optY, pages.OptimizationPage); optY = optY + 50
 local function updateOptVisuals()
-OptParticlesBtn.Text = reduceParticles and string.char(10052, 65039, 32, 82, 101, 100, 117, 122, 105, 114, 32, 80, 97, 114, 116, 237, 99, 117, 108, 97, 115, 58, 32, 79, 78) or string.char(10052, 65039, 32, 82, 101, 100, 117, 122, 105, 114, 32, 80, 97, 114, 116, 237, 99, 117, 108, 97, 115, 58, 32, 79, 70, 70)
+OptParticlesBtn.Text = reduceParticles and "❄️ Reduzir Partículas: ON" or "❄️ Reduzir Partículas: OFF"
 OptParticlesBtn.BackgroundColor3 = reduceParticles and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
-OptFogBtn.Text = removeFog and string.char(55356, 57131, 65039, 32, 82, 101, 109, 111, 118, 101, 114, 32, 78, 233, 118, 111, 97, 58, 32, 79, 78) or string.char(55356, 57131, 65039, 32, 82, 101, 109, 111, 118, 101, 114, 32, 78, 233, 118, 111, 97, 58, 32, 79, 70, 70)
+OptFogBtn.Text = removeFog and "🌫️ Remover Névoa: ON" or "🌫️ Remover Névoa: OFF"
 OptFogBtn.BackgroundColor3 = removeFog and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
-OptDecorBtn.Text = removeDecorations and string.char(55357, 56785, 65039, 32, 82, 101, 109, 111, 118, 101, 114, 32, 68, 101, 99, 111, 114, 97, 231, 245, 101, 115, 58, 32, 79, 78) or string.char(55357, 56785, 65039, 32, 82, 101, 109, 111, 118, 101, 114, 32, 68, 101, 99, 111, 114, 97, 231, 245, 101, 115, 58, 32, 79, 70, 70)
+OptDecorBtn.Text = removeDecorations and "🗑️ Remover Decorações: ON" or "🗑️ Remover Decorações: OFF"
 OptDecorBtn.BackgroundColor3 = removeDecorations and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
-OptWaterBtn.Text = removeWaterEffects and string.char(55357, 56487, 32, 82, 101, 109, 111, 118, 101, 114, 32, 69, 102, 101, 105, 116, 111, 115, 32, 193, 103, 117, 97, 58, 32, 79, 78) or string.char(55357, 56487, 32, 82, 101, 109, 111, 118, 101, 114, 32, 69, 102, 101, 105, 116, 111, 115, 32, 193, 103, 117, 97, 58, 32, 79, 70, 70)
+OptWaterBtn.Text = removeWaterEffects and "💧 Remover Efeitos Água: ON" or "💧 Remover Efeitos Água: OFF"
 OptWaterBtn.BackgroundColor3 = removeWaterEffects and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
-OptShadowsBtn.Text = disableShadows and string.char(55356, 57105, 32, 68, 101, 115, 97, 116, 105, 118, 97, 114, 32, 83, 111, 109, 98, 114, 97, 115, 58, 32, 79, 78) or string.char(55356, 57105, 32, 68, 101, 115, 97, 116, 105, 118, 97, 114, 32, 83, 111, 109, 98, 114, 97, 115, 58, 32, 79, 70, 70)
+OptShadowsBtn.Text = disableShadows and "🌑 Desativar Sombras: ON" or "🌑 Desativar Sombras: OFF"
 OptShadowsBtn.BackgroundColor3 = disableShadows and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
-OptAnimBtn.Text = disableAnimations and string.char(55356, 57260, 32, 68, 101, 115, 97, 116, 105, 118, 97, 114, 32, 65, 110, 105, 109, 97, 231, 245, 101, 115, 58, 32, 79, 78) or string.char(55356, 57260, 32, 68, 101, 115, 97, 116, 105, 118, 97, 114, 32, 65, 110, 105, 109, 97, 231, 245, 101, 115, 58, 32, 79, 70, 70)
+OptAnimBtn.Text = disableAnimations and "🎬 Desativar Animações: ON" or "🎬 Desativar Animações: OFF"
 OptAnimBtn.BackgroundColor3 = disableAnimations and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
 end
 OptParticlesBtn.MouseButton1Click:Connect(function()
@@ -770,14 +770,14 @@ disableAnimations = not disableAnimations
 updateOptVisuals()
 end)
 local visY = 5
-local ChamsBtn = createToggleButton(string.char(55356, 57096, 32, 67, 72, 65, 77, 83, 58, 32, 79, 70, 70), visY, pages.VisualPage); visY = visY + 50
-local WireframeBtn = createToggleButton(string.char(55357, 56626, 32, 87, 73, 82, 69, 70, 82, 65, 77, 69, 58, 32, 79, 70, 70), visY, pages.VisualPage); visY = visY + 50
-local ZoomInput = createInputField(string.char(90, 111, 111, 109, 32, 40, 49, 45, 49, 48, 41, 58), zoomLevel, visY, pages.VisualPage); visY = visY + 45
-local FOVInput = createInputField(string.char(70, 79, 86, 32, 40, 49, 48, 45, 49, 50, 48, 41, 58), fovLevel, visY, pages.VisualPage); visY = visY + 45
+local ChamsBtn = createToggleButton("🌈 CHAMS: OFF", visY, pages.VisualPage); visY = visY + 50
+local WireframeBtn = createToggleButton("🔲 WIREFRAME: OFF", visY, pages.VisualPage); visY = visY + 50
+local ZoomInput = createInputField("Zoom (1-10):", zoomLevel, visY, pages.VisualPage); visY = visY + 45
+local FOVInput = createInputField("FOV (10-120):", fovLevel, visY, pages.VisualPage); visY = visY + 45
 local function updateVisualVisuals()
-ChamsBtn.Text = chamsEnabled and string.char(55356, 57096, 32, 67, 72, 65, 77, 83, 58, 32, 79, 78) or string.char(55356, 57096, 32, 67, 72, 65, 77, 83, 58, 32, 79, 70, 70)
+ChamsBtn.Text = chamsEnabled and "🌈 CHAMS: ON" or "🌈 CHAMS: OFF"
 ChamsBtn.BackgroundColor3 = chamsEnabled and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
-WireframeBtn.Text = wireframeEnabled and string.char(55357, 56626, 32, 87, 73, 82, 69, 70, 82, 65, 77, 69, 58, 32, 79, 78) or string.char(55357, 56626, 32, 87, 73, 82, 69, 70, 82, 65, 77, 69, 58, 32, 79, 70, 70)
+WireframeBtn.Text = wireframeEnabled and "🔲 WIREFRAME: ON" or "🔲 WIREFRAME: OFF"
 WireframeBtn.BackgroundColor3 = wireframeEnabled and Color3.fromRGB(80, 80, 80) or Color3.fromRGB(30, 30, 30)
 end
 ChamsBtn.MouseButton1Click:Connect(function()
@@ -796,18 +796,18 @@ FOVInput.FocusLost:Connect(function()
 local val = tonumber(FOVInput.Text)
 if val and val >= 10 and val <= 120 then fovLevel = val end
 end)
-local ToggleButton = Instance.new(string.char(84, 101, 120, 116, 66, 117, 116, 116, 111, 110))
+local ToggleButton = Instance.new("TextButton")
 ToggleButton.Size = UDim2.new(0, 55, 0, 55)
 ToggleButton.Position = UDim2.new(0.02, 0, 0.9, 0)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 ToggleButton.BackgroundTransparency = 0.2
-ToggleButton.Text = string.char(9889)
+ToggleButton.Text = "⚡"
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.Font = Enum.Font.GothamBold
 ToggleButton.TextSize = 24
 ToggleButton.Parent = ScreenGui
 ToggleButton.Visible = false
-Instance.new(string.char(85, 73, 67, 111, 114, 110, 101, 114), ToggleButton).CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(1, 0)
 createStaticBorder(ToggleButton, 2.5, Color3.fromRGB(150, 150, 150))
 local dragging = false
 local dragStartMouse = nil
@@ -857,26 +857,26 @@ end)
 LoginBtn.MouseButton1Click:Connect(function()
 local key = KeyInput.Text
 if key == "" then
-StatusText.Text = string.char(10060, 32, 68, 105, 103, 105, 116, 101, 32, 117, 109, 97, 32, 107, 101, 121, 33)
+StatusText.Text = "❌ Digite uma key!"
 StatusText.TextColor3 = Color3.fromRGB(255, 100, 100)
 return
 end
-StatusText.Text = string.char(55357, 56580, 32, 86, 101, 114, 105, 102, 105, 99, 97, 110, 100, 111, 32, 107, 101, 121, 32, 101, 32, 72, 87, 73, 68, 46, 46, 46)
+StatusText.Text = "🔄 Verificando key e HWID..."
 StatusText.TextColor3 = Color3.fromRGB(255, 255, 150)
 local hwid = getHWID()
 local valida, motivo = validarKeyNoServidor(key, hwid)
 if valida then
 if Background then Background:Destroy() end
-StatusText.Text = string.char(9989, 32, 75, 101, 121, 32, 118, 225, 108, 105, 100, 97, 33, 32, 67, 97, 114, 114, 101, 103, 97, 110, 100, 111, 46, 46, 46)
+StatusText.Text = "✅ Key válida! Carregando..."
 StatusText.TextColor3 = Color3.fromRGB(200, 255, 200)
 TweenService:Create(KeyFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
 task.wait(0.3)
 KeyFrame.Visible = false
 animateMainIn()
 ToggleButton.Visible = true
-StarterGui:SetCore(string.char(83, 101, 110, 100, 78, 111, 116, 105, 102, 105, 99, 97, 116, 105, 111, 110), {Title = string.char(9889, 32, 68, 65, 82, 75, 32, 80, 82, 69, 77, 73, 85, 77), Text = string.char(75, 101, 121, 32, 97, 116, 105, 118, 97, 100, 97, 32, 99, 111, 109, 32, 115, 117, 99, 101, 115, 115, 111, 33, 32, 72, 87, 73, 68, 32, 118, 105, 110, 99, 117, 108, 97, 100, 111, 46), Duration = 3})
+StarterGui:SetCore("SendNotification", {Title = "⚡ DARK PREMIUM", Text = "Key ativada com sucesso! HWID vinculado.", Duration = 3})
 else
-StatusText.Text = string.char(10060, 32) .. (motivo or string.char(75, 101, 121, 32, 105, 110, 118, 225, 108, 105, 100, 97))
+StatusText.Text = "❌ " .. (motivo or "Key inválida")
 StatusText.TextColor3 = Color3.fromRGB(255, 100, 100)
 TweenService:Create(KeyFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Position = UDim2.new(0.5, -260, 0.5, -100)}):Play()
 task.wait(0.1)
@@ -885,7 +885,7 @@ task.wait(0.1)
 TweenService:Create(KeyFrame, TweenInfo.new(0.1, Enum.EasingStyle.Quad), {Position = UDim2.new(0.5, -250, 0.5, -100)}):Play()
 KeyInput.Text = ""
 task.wait(1)
-StatusText.Text = string.char(55357, 56593, 32, 65, 103, 117, 97, 114, 100, 97, 110, 100, 111, 32, 99, 104, 97, 118, 101, 46, 46, 46)
+StatusText.Text = "🔑 Aguardando chave..."
 StatusText.TextColor3 = Color3.fromRGB(200, 200, 200)
 end
 end)
@@ -895,21 +895,21 @@ return Color3.fromRGB(255, 50, 50)
 end
 local function createEsp(plr)
 if plr == player then return end
-local folder = Instance.new(string.char(70, 111, 108, 100, 101, 114))
-folder.Name = string.char(69, 83, 80, 95) .. plr.Name
+local folder = Instance.new("Folder")
+folder.Name = "ESP_" .. plr.Name
 folder.Parent = guiParent
-local highlight = Instance.new(string.char(72, 105, 103, 104, 108, 105, 103, 104, 116))
-highlight.Name = string.char(72, 105, 103, 104, 108, 105, 103, 104, 116)
+local highlight = Instance.new("Highlight")
+highlight.Name = "Highlight"
 highlight.FillTransparency = 0.5
 highlight.OutlineTransparency = 0
 highlight.Parent = folder
-local billboard = Instance.new(string.char(66, 105, 108, 108, 98, 111, 97, 114, 100, 71, 117, 105))
-billboard.Name = string.char(78, 97, 109, 101, 84, 97, 103)
+local billboard = Instance.new("BillboardGui")
+billboard.Name = "NameTag"
 billboard.Size = UDim2.new(0, 200, 0, 50)
 billboard.Adornee = nil
 billboard.AlwaysOnTop = true
 billboard.Parent = folder
-local nameLabel = Instance.new(string.char(84, 101, 120, 116, 76, 97, 98, 101, 108))
+local nameLabel = Instance.new("TextLabel")
 nameLabel.Size = UDim2.new(1, 0, 1, 0)
 nameLabel.BackgroundTransparency = 1
 nameLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -918,12 +918,12 @@ nameLabel.TextSize = 12
 nameLabel.TextStrokeTransparency = 0
 nameLabel.Parent = billboard
 local function update()
-if espEnabled and plr.Character and plr.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100, 82, 111, 111, 116, 80, 97, 114, 116)) and plr.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100)) and plr.Character.Humanoid.Health > 0 then
+if espEnabled and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 then
 highlight.Adornee = plr.Character
 highlight.FillColor = getColor(plr)
-billboard.Adornee = plr.Character:FindFirstChild(string.char(72, 101, 97, 100))
+billboard.Adornee = plr.Character:FindFirstChild("Head")
 billboard.Enabled = true
-nameLabel.Text = plr.Name .. string.char(32, 91) .. math.floor(plr.Character.Humanoid.Health) .. string.char(93)
+nameLabel.Text = plr.Name .. " [" .. math.floor(plr.Character.Humanoid.Health) .. "]"
 nameLabel.TextColor3 = getColor(plr)
 else
 highlight.Adornee = nil
@@ -935,7 +935,7 @@ end
 for _, p in ipairs(Players:GetPlayers()) do createEsp(p) end
 Players.PlayerAdded:Connect(createEsp)
 local function ResetJump()
-if player.Character and player.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+if player.Character and player.Character:FindFirstChild("Humanoid") then
 player.Character.Humanoid.JumpPower = 50
 player.Character.Humanoid.UseJumpPower = true
 end
@@ -950,7 +950,7 @@ HitboxSizeInput.FocusLost:Connect(function() getgenv().HitboxSize = tonumber(Hit
 HitboxTransInput.FocusLost:Connect(function() getgenv().HitboxTransparency = tonumber(HitboxTransInput.Text) or getgenv().HitboxTransparency end)
 local function SetupToolDetection(character)
 character.ChildAdded:Connect(function(child)
-if child:IsA(string.char(84, 111, 111, 108)) and (string.find(child.Name, string.char(83, 111, 117, 108)) or string.find(child.Name, string.char(71, 117, 105, 116, 97, 114))) then
+if child:IsA("Tool") and (string.find(child.Name, "Soul") or string.find(child.Name, "Guitar")) then
 child.Activated:Connect(function()
 if not getgenv().GlideEnabled then return end
 LastShootTime = tick()
@@ -970,7 +970,7 @@ espEnabled = not espEnabled
 updateEspVisual()
 end
 if input.KeyCode == Enum.KeyCode.G then
-if player.Character and player.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100, 82, 111, 111, 116, 80, 97, 114, 116)) then
+if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
 local hrp = player.Character.HumanoidRootPart
 hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
 hrp.Velocity = hrp.Velocity + Vector3.new(0, JumpForce, 0)
@@ -979,13 +979,13 @@ end
 end)
 RunService.RenderStepped:Connect(function()
 pingDisplay = player:GetNetworkPing() * 1000
-PingLabel.Text = string.format(string.char(55357, 56566, 32, 80, 105, 110, 103, 58, 32, 37, 46, 48, 102, 32, 109, 115), pingDisplay)
-if flyActive and player.Character and player.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100, 82, 111, 111, 116, 80, 97, 114, 116)) then
+PingLabel.Text = string.format("📶 Ping: %.0f ms", pingDisplay)
+if flyActive and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
 local root = player.Character.HumanoidRootPart
 if not FlyVel or FlyVel.Parent ~= root then
 if FlyVel then FlyVel:Destroy() end
-FlyVel = Instance.new(string.char(66, 111, 100, 121, 86, 101, 108, 111, 99, 105, 116, 121))
-FlyVel.Name = string.char(83, 107, 121, 70, 108, 121)
+FlyVel = Instance.new("BodyVelocity")
+FlyVel.Name = "SkyFly"
 FlyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
 FlyVel.Parent = root
 end
@@ -996,7 +996,7 @@ if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection
 if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + camera.CFrame.RightVector end
 FlyVel.Velocity = moveDirection * flySpeed
 end
-if aimbotActive and aimbotTarget and aimbotTarget.Character and aimbotTarget.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100, 82, 111, 111, 116, 80, 97, 114, 116)) then
+if aimbotActive and aimbotTarget and aimbotTarget.Character and aimbotTarget.Character:FindFirstChild("HumanoidRootPart") then
 camera.CFrame = CFrame.new(camera.CFrame.Position, aimbotTarget.Character.HumanoidRootPart.Position)
 end
 if getgenv().HitboxStatus == true then
@@ -1008,8 +1008,8 @@ pcall(function()
 local hrp = v.Character.HumanoidRootPart
 hrp.Size = Vector3.new(getgenv().HitboxSize, getgenv().HitboxSize, getgenv().HitboxSize)
 hrp.Transparency = getgenv().HitboxTransparency
-hrp.BrickColor = BrickColor.new(string.char(82, 101, 97, 108, 108, 121, 32, 114, 101, 100))
-hrp.Material = string.char(78, 101, 111, 110)
+hrp.BrickColor = BrickColor.new("Really red")
+hrp.Material = "Neon"
 hrp.CanCollide = false
 end)
 end
@@ -1034,9 +1034,9 @@ for i,v in next, Players:GetPlayers() do
 if v ~= player and v.Character then
 pcall(function()
 for _, part in ipairs(v.Character:GetDescendants()) do
-if part:IsA(string.char(66, 97, 115, 101, 80, 97, 114, 116)) then
+if part:IsA("BasePart") then
 part.Color = chamsColor
-part.Material = string.char(78, 101, 111, 110)
+part.Material = "Neon"
 part.Transparency = 0.3
 end
 end
@@ -1049,8 +1049,8 @@ for i,v in next, Players:GetPlayers() do
 if v ~= player and v.Character then
 pcall(function()
 for _, part in ipairs(v.Character:GetDescendants()) do
-if part:IsA(string.char(66, 97, 115, 101, 80, 97, 114, 116)) then
-part.Material = string.char(70, 111, 114, 99, 101, 70, 105, 101, 108, 100)
+if part:IsA("BasePart") then
+part.Material = "ForceField"
 end
 end
 end)
@@ -1061,22 +1061,22 @@ if antiAFK then
 VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.W, false, game)
 VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.W, false, game)
 end
-if godMode and player.Character and player.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+if godMode and player.Character and player.Character:FindFirstChild("Humanoid") then
 player.Character.Humanoid.Health = 100
 player.Character.Humanoid.MaxHealth = 100
 end
-if infiniteJump and player.Character and player.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+if infiniteJump and player.Character and player.Character:FindFirstChild("Humanoid") then
 player.Character.Humanoid.UseJumpPower = true
 player.Character.Humanoid.JumpPower = 1000
 else
-if player.Character and player.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+if player.Character and player.Character:FindFirstChild("Humanoid") then
 player.Character.Humanoid.JumpPower = 50
 end
 end
-if speedHack and player.Character and player.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+if speedHack and player.Character and player.Character:FindFirstChild("Humanoid") then
 player.Character.Humanoid.WalkSpeed = speedHackValue
 else
-if player.Character and player.Character:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+if player.Character and player.Character:FindFirstChild("Humanoid") then
 player.Character.Humanoid.WalkSpeed = 16
 end
 end
@@ -1084,13 +1084,13 @@ end)
 RunService.Heartbeat:Connect(function()
 if not getgenv().GlideEnabled then return end
 local char = player.Character
-if char and char:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100, 82, 111, 111, 116, 80, 97, 114, 116)) and char:FindFirstChild(string.char(72, 117, 109, 97, 110, 111, 105, 100)) then
+if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
 local hrp = char.HumanoidRootPart
 local hum = char.Humanoid
 if (tick() - LastShootTime < 1.5) and hrp.Velocity.Magnitude > 20 then
-if hrp:FindFirstChild(string.char(79, 109, 110, 105, 71, 108, 105, 100, 101)) then hrp.OmniGlide:Destroy() end
-local CurrentBV = Instance.new(string.char(66, 111, 100, 121, 86, 101, 108, 111, 99, 105, 116, 121))
-CurrentBV.Name = string.char(79, 109, 110, 105, 71, 108, 105, 100, 101)
+if hrp:FindFirstChild("OmniGlide") then hrp.OmniGlide:Destroy() end
+local CurrentBV = Instance.new("BodyVelocity")
+CurrentBV.Name = "OmniGlide"
 CurrentBV.MaxForce = Vector3.new(100000, 0, 100000)
 local Dir = hum.MoveDirection
 if Dir.Magnitude == 0 then
@@ -1121,8 +1121,8 @@ task.wait(fastAttackInterval)
 end
 end
 end)
-StarterGui:SetCore(string.char(83, 101, 110, 100, 78, 111, 116, 105, 102, 105, 99, 97, 116, 105, 111, 110), {
-Title = string.char(9889, 32, 68, 65, 82, 75, 78, 69, 83, 83, 88, 89, 32, 72, 85, 66, 32, 9889),
-Text = string.char(68, 105, 103, 105, 116, 101, 32, 97, 32, 75, 101, 121, 32, 110, 111, 32, 112, 97, 105, 110, 101, 108, 32, 112, 97, 114, 97, 32, 97, 99, 101, 115, 115, 97, 114, 33),
+StarterGui:SetCore("SendNotification", {
+Title = "⚡ DARKNESSXY HUB ⚡",
+Text = "Digite a Key no painel para acessar!",
 Duration = 4
 })
