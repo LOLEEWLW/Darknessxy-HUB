@@ -4,6 +4,7 @@
     Tema: Dark + Aimbot com seleção de alvo
     MEGA UPDATE: Painel 600x750, + abas, + opções de otimização, visual, misc
     MOD: Botão flutuante móvel (arrastável com o mouse)
+    ATALHO: Tecla 0 para ligar/desligar Aimbot
 ]]
 
 -- ==========================================
@@ -1160,6 +1161,11 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
             hrp.Velocity = Vector3.new(hrp.Velocity.X, 0, hrp.Velocity.Z)
             hrp.Velocity = hrp.Velocity + Vector3.new(0, JumpForce, 0)
         end
+    end
+    -- NOVO ATALHO: Tecla 0 para ligar/desligar o Aimbot
+    if input.KeyCode == Enum.KeyCode.Zero then
+        aimbotActive = not aimbotActive
+        updateAimbotToggleVisual()
     end
 end)
 
